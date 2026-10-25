@@ -149,6 +149,7 @@
   let i = 0;
   let orden = "votos";
   let ultimoCambio = null;
+  let titulos = {};      // clase_id -> título, cuando la sesión junta varias clases
 
   function mensaje(titulo, texto, enlace) {
     $("controles").classList.add("oculto");
@@ -175,13 +176,21 @@
     if (e1) return mensaje("No se pudo cargar", "Revisa tu conexión y toca Actualizar.");
     if (!c) return mensaje("No encontramos esta clase", "Puede que se haya borrado. Ábrela de nuevo desde la administración.", { texto: "Ir a la administración", href: "admin.html" });
     clase = c;
-    document.title = `${c.titulo} · Sesión en vivo`;
-    $("clase").textContent = c.titulo;
+    // La sesión junta todas las clases activas que cierran a la misma hora (por ejemplo, tres temas de un módulo)
+    let hermanas = [c];
+    if (!c.archivada) {
+      const { data: hs } = await sb.from("clases").select("id, titulo").eq("cierra_en", c.cierra_en).eq("archivada", false).order("titulo");
+      if (hs && hs.length) hermanas = hs;
+    }
+    titulos = Object.fromEntries(hermanas.map((h) => [h.id, h.titulo]));
+    const nombre = hermanas.map((h) => h.titulo).join(" · ");
+    document.title = `${hermanas.length > 1 ? "Sesión en vivo" : c.titulo} · Preguntas Regenera360`;
+    $("clase").textContent = nombre;
     $("herramientas").classList.remove("oculto");
 
     const { data: ps, error: e2 } = await sb.from("preguntas")
-      .select("id, nombre, texto, votos, respondida, tema, movida_desde, fuera_de_tema, fusionada_en, creada_en")
-      .eq("clase_id", c.id);
+      .select("id, clase_id, nombre, texto, votos, respondida, tema, movida_desde, fuera_de_tema, fusionada_en, creada_en")
+      .in("clase_id", hermanas.map((h) => h.id));
     if (e2) return mensaje("No se pudieron cargar las preguntas", "Revisa tu conexión y toca Actualizar.");
 
     juntadas = {};
@@ -240,7 +249,9 @@
 
     const etqs = el("div", "etiquetas");
     if (p.respondida) etqs.append(el("span", "etq hecha", "✓ Respondida"));
-    if (p.tema) etqs.append(el("span", "etq", p.tema));
+    const corto = (titulos[p.clase_id] || "").replace(/^Módulo \d+:\s*/i, "");
+    if (Object.keys(titulos).length > 1) etqs.append(el("span", "etq", corto));
+    if (p.tema && p.tema.toLowerCase() !== corto.toLowerCase()) etqs.append(el("span", "etq", p.tema));
     if (p.origen) etqs.append(el("span", "etq origen", "Llegó desde " + p.origen));
     if (etqs.childElementCount) z.append(etqs);
 

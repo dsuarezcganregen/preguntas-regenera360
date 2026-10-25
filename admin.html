@@ -136,6 +136,24 @@
   .opciones-juntar label:hover { background: var(--pasto-claro); }
   .opciones-juntar input { margin-top: 0.3rem; }
 
+  .resumen-sesion {
+    background: var(--hoja); border: 2px solid var(--pasto); border-radius: var(--radio);
+    padding: 1rem 1.1rem; margin: 0 0 1.5rem; box-shadow: var(--sombra);
+  }
+  .resumen-sesion h3 { font-family: "Bitter", Georgia, serif; font-size: 1.2rem; margin: 0 0 0.3rem; color: var(--pasto-hondo); }
+  .resumen-sesion .cifras { margin: 0 0 0.8rem; color: var(--tinta-suave); }
+  .resumen-sesion .cifras strong { color: var(--tinta); }
+  .resumen-sesion .alerta-sug { background: var(--paja-clara); border-radius: 10px; padding: 0.6rem 0.75rem; margin: 0 0 0.8rem; }
+  .resumen-sesion .alerta-sug p { margin: 0 0 0.4rem; }
+  .resumen-sesion .alerta-sug .botones { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .resumen-sesion details summary { cursor: pointer; font-weight: 700; color: var(--pasto); margin-bottom: 0.4rem; }
+  .resumen-sesion .tema { font-weight: 700; margin: 0.8rem 0 0.25rem; }
+  .resumen-sesion ol { margin: 0; padding-left: 1.4rem; }
+  .resumen-sesion li { margin: 0.2rem 0; }
+  .resumen-sesion li .q { color: var(--suelo); font-size: 0.92rem; }
+  .resumen-sesion .compartir { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; }
+  .fila.destacada { outline: 3px solid var(--paja); outline-offset: 2px; }
+
   .toast {
     position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
     background: var(--tinta); color: var(--fondo); padding: 0.7rem 1.1rem; border-radius: 10px;
@@ -243,7 +261,8 @@
   let clases = [];
   let conteos = {};           // clase_id -> { total, pendientes }
   let seleccionada = null;    // id de clase, o "bandeja"
-  let porUbicar = [];         // preguntas marcadas como fuera de tema, de todas las clases
+  let porUbicar = [];
+  let preguntasSesion = [];   // preguntas de todas las clases que cierran a la misma hora         // preguntas marcadas como fuera de tema, de todas las clases
   let ordenAdmin = "votos";
   let preguntas = [];
   let filtro = "pendientes";
@@ -408,6 +427,14 @@
       .select("id, nombre, texto, votos, respondida, respondida_en, creada_en, tema, fuera_de_tema, sugerida_fuera, sugerencia_clase_id, nota_sugerencia, sugerida_duplicada_de, fusionada_en, movida_desde")
       .eq("clase_id", seleccionada)
       .order("votos", { ascending: false }).order("creada_en", { ascending: true });
+    const hermanas = clasesDeLaSesion(clases.find((x) => x.id === seleccionada));
+    preguntasSesion = data || [];
+    if (!error && hermanas.length > 1) {
+      const { data: todas } = await sb.from("preguntas")
+        .select("id, clase_id, nombre, texto, votos, respondida, tema, fuera_de_tema, sugerida_fuera, sugerida_duplicada_de, fusionada_en, movida_desde, creada_en")
+        .in("clase_id", hermanas.map((h) => h.id));
+      preguntasSesion = todas || [];
+    }
     if (!error) {
       preguntas = data || [];
       const vivas = preguntas.filter((p) => !p.fusionada_en && !p.fuera_de_tema);
@@ -465,10 +492,6 @@
     zoom.href = new URL("./sesion.html?c=" + encodeURIComponent(c.slug), location.href.split("#")[0].split("?")[0]).href;
     zoom.target = "_blank"; zoom.rel = "noopener";
     acc.append(zoom);
-    if (c.resumen_url) {
-      const res = el("a", "boton secundario chico", "Ver resumen en Notion"); res.href = c.resumen_url; res.target = "_blank"; res.rel = "noopener";
-      acc.append(res);
-    }
     const editar = el("button", "boton secundario chico", "Editar clase"); editar.type = "button";
     editar.addEventListener("click", () => abrirDialogo(c));
     const csv = el("button", "boton secundario chico", "Descargar preguntas (CSV)"); csv.type = "button";
@@ -480,6 +503,7 @@
     borrar.addEventListener("click", () => borrarClase(c));
     acc.append(editar, csv, archivar, borrar);
     zona.append(acc);
+    pintarResumen(zona, c);
 
     const vivas = preguntas.filter((p) => !p.fusionada_en && !p.fuera_de_tema);
     const fuera = preguntas.filter((p) => !p.fusionada_en && p.fuera_de_tema);
@@ -711,6 +735,148 @@
     if (error) return toast("No se pudo separar.");
     toast("Pregunta separada");
     await cargarClases();
+  }
+
+  // ---------- Resumen de la sesión ----------
+  // Una sesión son todas las clases activas que cierran a la misma hora (por ejemplo, tres temas de un módulo)
+  function clasesDeLaSesion(c) {
+    if (!c) return [];
+    if (c.archivada) return [c];
+    const t = new Date(c.cierra_en).getTime();
+    return clases.filter((x) => !x.archivada && new Date(x.cierra_en).getTime() === t);
+  }
+  const fmtSesion = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/Mexico_City" });
+  const inicioSesion = (c) => new Date(new Date(c.cierra_en).getTime() + 5 * 3600e3);
+  // "viernes 30 de octubre, 5:00 p.m."
+  function cuandoSesion(c) {
+    const partes = Object.fromEntries(fmtSesion.formatToParts(inicioSesion(c)).map((x) => [x.type, x.value]));
+    const hora = new Intl.DateTimeFormat("es-MX", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/Mexico_City" }).format(inicioSesion(c));
+    return `${partes.weekday} ${partes.day} de ${partes.month}, ${hora}`;
+  }
+  // "Módulo 2: Cercos eléctricos y Cálculos hidráulicos"
+  function nombreSesion(hermanas) {
+    const unir = (xs) => xs.length < 2 ? xs.join("") : xs.slice(0, -1).join(", ") + " y " + xs[xs.length - 1];
+    const pref = hermanas.map((h) => (h.titulo.match(/^(Módulo \d+):/i) || [])[1]);
+    if (hermanas.length > 1 && pref[0] && pref.every((x) => x === pref[0])) {
+      return `${pref[0]}: ${unir(hermanas.map((h) => h.titulo.replace(/^Módulo \d+:\s*/i, "")))}`;
+    }
+    return unir(hermanas.map((h) => h.titulo));
+  }
+
+  function datosResumen(c) {
+    const hermanas = clasesDeLaSesion(c);
+    const vivas = preguntasSesion.filter((p) => !p.fusionada_en && !p.fuera_de_tema);
+    const juntadas = {};
+    for (const p of preguntasSesion) if (p.fusionada_en) juntadas[p.fusionada_en] = (juntadas[p.fusionada_en] || 0) + 1;
+    const porTema = new Map();
+    for (const p of vivas) {
+      const t = p.tema || "Sin tema todavía";
+      if (!porTema.has(t)) porTema.set(t, []);
+      porTema.get(t).push(p);
+    }
+    const temas = [...porTema.entries()]
+      .map(([tema, ps]) => ({ tema, ps: ps.sort((a, b) => b.votos - a.votos || new Date(a.creada_en) - new Date(b.creada_en)), votos: ps.reduce((s, p) => s + p.votos, 0) }))
+      .sort((a, b) => (a.tema === "Sin tema todavía") - (b.tema === "Sin tema todavía") || b.votos - a.votos);
+    const vivasIds = new Set(vivas.map((p) => p.id));
+    const sugFuera = vivas.filter((p) => p.sugerida_fuera);
+    const sugRep = vivas.filter((p) => p.sugerida_duplicada_de && vivasIds.has(p.sugerida_duplicada_de));
+    return { hermanas, vivas, juntadas, temas, sugFuera, sugRep, votos: vivas.reduce((s, p) => s + p.votos, 0) };
+  }
+
+  function textoResumen(c, d) {
+    const lineas = [`📋 *Preguntas para la sesión del ${cuandoSesion(c)}*`, nombreSesion(d.hermanas), "", `${d.vivas.length} ${d.vivas.length === 1 ? "pregunta" : "preguntas"}, ${d.votos} ${d.votos === 1 ? "voto" : "votos"}`];
+    for (const t of d.temas) {
+      lineas.push("", `*${t.tema}* (${t.votos} ${t.votos === 1 ? "voto" : "votos"})`);
+      t.ps.forEach((p, i) => {
+        const extra = d.juntadas[p.id] ? `, +${d.juntadas[p.id]} igual${d.juntadas[p.id] === 1 ? "" : "es"}` : "";
+        const clase = d.hermanas.length > 1 ? `, de ${tituloCorto(p.clase_id)}` : "";
+        lineas.push(`${i + 1}. ${p.texto} (${p.nombre}, ${p.votos} 👍${extra}${clase})`);
+      });
+    }
+    return lineas.join("\n");
+  }
+  const tituloCorto = (id) => tituloDe(id).replace(/^Módulo \d+:\s*/i, "");
+
+  function pintarResumen(zona, c) {
+    const d = datosResumen(c);
+    if (!d.vivas.length) return;
+    const f = fase(c);
+    const caja = el("section", "resumen-sesion");
+    caja.setAttribute("aria-label", "Resumen de la sesión");
+    caja.append(el("h3", null, f === "cerrada" || f === "archivada" ? "Listo para la sesión" : "Así va la sesión (todavía recibe preguntas)"));
+    const cif = el("p", "cifras");
+    cif.append(`Sesión del ${cuandoSesion(c)}: `, el("strong", null, `${d.vivas.length} ${d.vivas.length === 1 ? "pregunta" : "preguntas"}`), ` con ${d.votos} ${d.votos === 1 ? "voto" : "votos"}`);
+    if (d.hermanas.length > 1) cif.append(`, juntando ${nombreSesion(d.hermanas)}`);
+    cif.append(".");
+    caja.append(cif);
+
+    const pendientes = d.sugFuera.length + d.sugRep.length;
+    if (pendientes) {
+      const a = el("div", "alerta-sug");
+      const partes = [];
+      if (d.sugRep.length) partes.push(`${d.sugRep.length} ${d.sugRep.length === 1 ? "posible repetida" : "posibles repetidas"}`);
+      if (d.sugFuera.length) partes.push(`${d.sugFuera.length} ${d.sugFuera.length === 1 ? "posible fuera de tema" : "posibles fuera de tema"}`);
+      a.append(el("p", null, `🔎 Tienes ${partes.join(" y ")} por confirmar antes de la sesión.`));
+      const bs = el("div", "botones");
+      const porClase = new Map();
+      for (const p of [...d.sugRep, ...d.sugFuera]) porClase.set(p.clase_id, (porClase.get(p.clase_id) || 0) + 1);
+      for (const [id, n] of porClase) {
+        const b = el("button", "boton chico", id === c.id ? `Ver aquí (${n})` : `Ver en ${tituloCorto(id)} (${n})`); b.type = "button";
+        b.addEventListener("click", () => irASugerencias(id));
+        bs.append(b);
+      }
+      a.append(bs);
+      caja.append(a);
+    }
+
+    const det = el("details");
+    det.open = f === "cerrada";
+    det.append(el("summary", null, "Orden sugerido por tema"));
+    for (const t of d.temas) {
+      det.append(el("p", "tema", `${t.tema} (${t.votos} ${t.votos === 1 ? "voto" : "votos"})`));
+      const ol = el("ol");
+      for (const p of t.ps) {
+        const li = el("li");
+        li.append(p.texto, " ");
+        const extra = d.juntadas[p.id] ? `, +${d.juntadas[p.id]} igual${d.juntadas[p.id] === 1 ? "" : "es"}` : "";
+        const clase = d.hermanas.length > 1 ? `, ${tituloCorto(p.clase_id)}` : "";
+        li.append(el("span", "q", `(${p.nombre}, ${p.votos} 👍${extra}${clase}${p.respondida ? ", ya respondida" : ""})`));
+        ol.append(li);
+      }
+      det.append(ol);
+    }
+    caja.append(det);
+
+    const com = el("div", "compartir");
+    const wa = el("button", "boton chico", "Compartir por WhatsApp"); wa.type = "button";
+    wa.addEventListener("click", async () => {
+      const texto = textoResumen(c, d);
+      if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+        try { await navigator.share({ text: texto }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+      }
+      window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
+    });
+    const cp = el("button", "boton secundario chico", "Copiar resumen"); cp.type = "button";
+    cp.addEventListener("click", async () => {
+      const texto = textoResumen(c, d);
+      try { await navigator.clipboard.writeText(texto); toast("Resumen copiado"); }
+      catch { prompt("Copia el resumen:", texto); }
+    });
+    com.append(wa, cp);
+    caja.append(com);
+    zona.append(caja);
+  }
+
+  async function irASugerencias(claseId) {
+    if (claseId !== seleccionada) {
+      seleccionada = claseId; filtro = "todas"; pintarClases(); await cargarPreguntas();
+    } else if (filtro !== "todas") { filtro = "todas"; pintarDetalle(); }
+    const s = document.querySelector("#detalle .sugerencia");
+    if (s) {
+      const fila = s.closest(".fila");
+      fila.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+      fila.classList.add("destacada"); setTimeout(() => fila.classList.remove("destacada"), 2500);
+    }
   }
 
   let juntando = null;
