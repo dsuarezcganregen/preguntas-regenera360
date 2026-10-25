@@ -170,6 +170,7 @@
       <span class="prefijo"><small>…/?c=</small><input type="text" id="c-slug" maxlength="60" required></span>
     </label>
     <p class="ayuda" style="margin:-0.5rem 0 0.9rem">Se arma solo con el nombre. Solo minúsculas, números y guiones.</p>
+    <p class="aviso error oculto" id="aviso-slug" style="margin:-0.4rem 0 0.9rem">Si cambias esto, el enlace que ya compartiste deja de funcionar. Los alumnos necesitarían el enlace nuevo.</p>
     <div class="dos">
       <label class="campo">
         <span>Abre</span>
@@ -190,7 +191,7 @@
 
 <div id="toast" class="toast oculto" role="status"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
 (() => {
@@ -506,7 +507,11 @@
   }
 
   function descargarCsv(c) {
-    const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const q = (v) => {
+      let t = String(v ?? "");
+      if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;   // evita que Excel lo tome como fórmula
+      return `"${t.replace(/"/g, '""')}"`;
+    };
     const filas = [["Votos", "Pregunta", "Nombre", "Respondida", "Enviada"].map(q).join(",")];
     for (const p of preguntas) {
       filas.push([p.votos, p.texto, p.nombre, p.respondida ? "Sí" : "No", fmt.format(new Date(p.creada_en))].map(q).join(","));
@@ -523,6 +528,7 @@
     slugTocado = !!c;
     $("titulo-dialogo").textContent = c ? "Editar clase" : "Nueva clase";
     $("aviso-clase").classList.add("oculto");
+    $("aviso-slug").classList.add("oculto");
     $("c-titulo").value = c ? c.titulo : "";
     $("c-slug").value = c ? c.slug : "";
     const abre = c ? new Date(c.abre_en) : (() => { const d = new Date(); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1); return d; })();
@@ -536,7 +542,10 @@
   $("nueva-clase").addEventListener("click", () => abrirDialogo(null));
   $("cancelar-clase").addEventListener("click", () => $("dialogo-clase").close());
   $("c-titulo").addEventListener("input", () => { if (!slugTocado) $("c-slug").value = aSlug($("c-titulo").value); });
-  $("c-slug").addEventListener("input", () => { slugTocado = true; });
+  $("c-slug").addEventListener("input", () => {
+    slugTocado = true;
+    $("aviso-slug").classList.toggle("oculto", !editando || aSlug($("c-slug").value) === editando.slug);
+  });
   $("c-slug").addEventListener("blur", () => { $("c-slug").value = aSlug($("c-slug").value); });
 
   function errorClase(msg) { const a = $("aviso-clase"); a.textContent = msg; a.classList.remove("oculto"); }
