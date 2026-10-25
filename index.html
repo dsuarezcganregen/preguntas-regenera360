@@ -228,6 +228,7 @@
   });
 
   function fase() {
+    if (clase.archivada) return "cerrada";
     const t = ahora();
     if (t < new Date(clase.abre_en).getTime()) return "antes";
     if (t >= new Date(clase.cierra_en).getTime()) return "cerrada";

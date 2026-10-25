@@ -52,6 +52,13 @@
   .chip.abierta { background: var(--pasto); color: #fff; }
   .chip.antes { background: var(--paja-clara); color: var(--suelo); }
   .chip.cerrada { background: var(--linea); color: var(--tinta-suave); }
+  .chip.archivada { background: transparent; color: var(--tinta-suave); border: 1.5px dashed var(--tinta-suave); }
+  .archivadas { margin-top: 1.5rem; }
+  .archivadas summary { cursor: pointer; font-weight: 700; color: var(--tinta-suave); padding: 0.4rem 0; }
+  .archivadas summary:hover { color: var(--tinta); }
+  .archivadas .clases { margin-top: 0.6rem; }
+  .archivadas .clase-item { opacity: 0.8; }
+  .nota-archivo { background: var(--hoja); border: 1.5px dashed var(--linea); border-radius: 10px; padding: 0.7rem 0.9rem; margin: 0 0 1rem; color: var(--tinta-suave); }
   @media (prefers-color-scheme: dark) { .chip.abierta { color: #10170f; } }
 
   .detalle-vacio { padding: 3rem 1rem; text-align: center; color: var(--tinta-suave); border: 2px dashed var(--linea); border-radius: var(--radio); }
@@ -140,6 +147,10 @@
         <button class="boton chico" id="nueva-clase" type="button">Nueva clase</button>
       </div>
       <ul class="clases" id="clases"></ul>
+      <details class="archivadas oculto" id="zona-archivadas">
+        <summary id="titulo-archivadas">Archivadas</summary>
+        <ul class="clases" id="clases-archivadas"></ul>
+      </details>
     </aside>
 
     <section class="detalle" id="detalle" aria-live="polite"></section>
@@ -205,12 +216,13 @@
   }
 
   function fase(c) {
+    if (c.archivada) return "archivada";
     const t = Date.now();
     if (t < new Date(c.abre_en).getTime()) return "antes";
     if (t >= new Date(c.cierra_en).getTime()) return "cerrada";
     return "abierta";
   }
-  const nombreFase = { antes: "Programada", abierta: "Abierta", cerrada: "Cerrada" };
+  const nombreFase = { antes: "Programada", abierta: "Abierta", cerrada: "Cerrada", archivada: "Archivada" };
 
   const enlaceDe = (c) => new URL("./?c=" + encodeURIComponent(c.slug), location.href.split("#")[0].split("?")[0]).href;
 
@@ -277,7 +289,7 @@
   // ---------- Clases ----------
   async function cargarClases() {
     const [{ data: cs, error: e1 }, { data: ps, error: e2 }] = await Promise.all([
-      sb.from("clases").select("*").order("abre_en", { ascending: false }),
+      sb.from("clases").select("*").order("abre_en", { ascending: true }).order("cierra_en", { ascending: true }),
       sb.from("preguntas").select("clase_id, respondida"),
     ]);
     if (e1 || e2) return toast("No se pudieron cargar las clases. Recarga la página.");
@@ -288,32 +300,45 @@
       c.total++; if (!p.respondida) c.pendientes++;
     }
     if (!seleccionada || !clases.some((c) => c.id === seleccionada)) {
-      seleccionada = (clases.find((c) => fase(c) === "abierta") || clases[0] || {}).id || null;
+      seleccionada = (clases.find((c) => fase(c) === "abierta") || clases.find((c) => !c.archivada) || clases[0] || {}).id || null;
     }
     pintarClases();
     await cargarPreguntas();
   }
 
+  function itemClase(c) {
+    const li = el("li");
+    const b = el("button", "clase-item"); b.type = "button";
+    b.setAttribute("aria-current", c.id === seleccionada ? "true" : "false");
+    b.append(el("span", "nombre-clase", c.titulo));
+    const d = el("span", "datos");
+    const f = fase(c);
+    d.append(el("span", "chip " + f, nombreFase[f]));
+    const n = conteos[c.id] || { total: 0, pendientes: 0 };
+    d.append(el("span", null, n.total ? `${n.pendientes} pendientes de ${n.total}` : "sin preguntas"));
+    b.append(d);
+    b.addEventListener("click", () => { seleccionada = c.id; filtro = c.archivada ? "todas" : "pendientes"; pintarClases(); cargarPreguntas(); });
+    li.append(b);
+    return li;
+  }
+
   function pintarClases() {
+    const activas = clases.filter((c) => !c.archivada);
+    const archivadas = clases.filter((c) => c.archivada);
     const ul = $("clases"); ul.replaceChildren();
-    if (!clases.length) {
-      const li = el("li", "ayuda", "Todavía no hay clases. Crea la primera con el botón de arriba.");
-      return ul.append(li);
+    if (!activas.length) {
+      ul.append(el("li", "ayuda", clases.length
+        ? "No hay clases activas. Las archivadas están abajo."
+        : "Todavía no hay clases. Crea la primera con el botón de arriba."));
     }
-    for (const c of clases) {
-      const li = el("li");
-      const b = el("button", "clase-item"); b.type = "button";
-      b.setAttribute("aria-current", c.id === seleccionada ? "true" : "false");
-      b.append(el("span", "nombre-clase", c.titulo));
-      const d = el("span", "datos");
-      const f = fase(c);
-      d.append(el("span", "chip " + f, nombreFase[f]));
-      const n = conteos[c.id] || { total: 0, pendientes: 0 };
-      d.append(el("span", null, n.total ? `${n.pendientes} pendientes de ${n.total}` : "sin preguntas"));
-      b.append(d);
-      b.addEventListener("click", () => { seleccionada = c.id; filtro = "pendientes"; pintarClases(); cargarPreguntas(); });
-      li.append(b); ul.append(li);
-    }
+    for (const c of activas) ul.append(itemClase(c));
+
+    const zona = $("zona-archivadas");
+    zona.classList.toggle("oculto", !archivadas.length);
+    $("titulo-archivadas").textContent = `Archivadas (${archivadas.length})`;
+    const ua = $("clases-archivadas"); ua.replaceChildren();
+    for (const c of archivadas) ua.append(itemClase(c));
+    if (archivadas.some((c) => c.id === seleccionada)) zona.open = true;
   }
 
   // ---------- Preguntas ----------
@@ -351,6 +376,10 @@
     const fechas = el("p", "fechas");
     fechas.append(el("span", "chip " + f, nombreFase[f]), ` Abre ${fmtLargo.format(new Date(c.abre_en))} y cierra ${fmtLargo.format(new Date(c.cierra_en))}.`);
     zona.append(fechas);
+    if (c.archivada) {
+      const cuando = c.archivada_en ? ` el ${fmtLargo.format(new Date(c.archivada_en))}` : "";
+      zona.append(el("p", "nota-archivo", `Archivaste esta clase${cuando}. Las preguntas se guardan completas. Los alumnos todavía pueden abrir el enlace y leerlas, pero ya no pueden mandar nuevas ni votar.`));
+    }
 
     const caja = el("div", "enlace-clase");
     const url = enlaceDe(c);
@@ -370,9 +399,11 @@
     const csv = el("button", "boton secundario chico", "Descargar preguntas (CSV)"); csv.type = "button";
     csv.disabled = !preguntas.length;
     csv.addEventListener("click", () => descargarCsv(c));
+    const archivar = el("button", "boton secundario chico", c.archivada ? "Sacar del archivo" : "Archivar clase"); archivar.type = "button";
+    archivar.addEventListener("click", () => archivarClase(c, !c.archivada));
     const borrar = el("button", "boton secundario chico", "Borrar clase"); borrar.type = "button";
     borrar.addEventListener("click", () => borrarClase(c));
-    acc.append(editar, csv, borrar);
+    acc.append(editar, csv, archivar, borrar);
     zona.append(acc);
 
     const pend = preguntas.filter((p) => !p.respondida).length;
@@ -445,10 +476,28 @@
     cargarPreguntas();
   }
 
+  async function archivarClase(c, valor) {
+    if (valor) {
+      const f = fase(c);
+      if ((f === "abierta" || f === "antes") &&
+          !confirm(`"${c.titulo}" ${f === "abierta" ? "todavía está abierta" : "todavía no abre"}. Si la archivas, los alumnos ya no van a poder mandar preguntas ni votar en ella. ¿Archivarla de todos modos?`)) return;
+    }
+    const { error } = await sb.from("clases").update({ archivada: valor }).eq("id", c.id);
+    if (error) return toast("No se pudo guardar el cambio. Revisa tu conexión.");
+    if (valor) {
+      filtro = "todas";
+      toast("Clase archivada. La encuentras abajo, en Archivadas.");
+    } else {
+      toast("La clase regresó a tu lista principal.");
+    }
+    await cargarClases();
+  }
+
   async function borrarClase(c) {
     const n = (conteos[c.id] || {}).total || 0;
     const aviso = n ? `Se borran también sus ${n} preguntas.` : "No tiene preguntas.";
-    if (!confirm(`¿Borrar la clase "${c.titulo}"? ${aviso} No se puede deshacer.`)) return;
+    const sugerencia = c.archivada ? "" : " Si solo quieres quitarla de tu lista y conservar sus preguntas, mejor usa Archivar.";
+    if (!confirm(`¿Borrar la clase "${c.titulo}"? ${aviso} No se puede deshacer.${sugerencia}`)) return;
     const { error } = await sb.from("clases").delete().eq("id", c.id);
     if (error) return toast("No se pudo borrar la clase.");
     seleccionada = null;
