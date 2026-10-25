@@ -5,16 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Preguntas de la clase · Regenera360</title>
 <meta name="robots" content="noindex">
+<meta name="description" content="Deja tu pregunta para la clase y vota por las dudas que compartes con tus compañeros.">
+<meta property="og:title" content="Preguntas de la clase · Regenera360">
+<meta property="og:description" content="Deja tu pregunta para la clase y vota por las dudas que compartes con tus compañeros.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="estilos.css">
 <style>
-  main { max-width: 640px; margin: 0 auto; padding: 1.5rem 16px 4rem; }
-  .marca { margin: 0 0 1.25rem; font-size: 0.95rem; color: var(--suelo); font-weight: 700; }
+  body { font-size: 1.125rem; }
+  main { max-width: 640px; margin: 0 auto; padding: 1.5rem 16px 5rem; }
+  .marca { margin: 0 0 1rem; font-size: 0.95rem; color: var(--suelo); font-weight: 700; }
   h1 { font-size: clamp(1.85rem, 6vw, 2.5rem); font-weight: 800; color: var(--pasto-hondo); }
-  .estado { margin: 0.6rem 0 1.5rem; color: var(--tinta-suave); }
+  .estado { margin: 0.6rem 0 1.25rem; color: var(--tinta-suave); }
   .estado strong { color: var(--tinta); }
+
+  .como {
+    background: var(--pasto-claro);
+    border-radius: var(--radio);
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+  .como h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .como ol { margin: 0; padding-left: 1.4rem; }
+  .como li + li { margin-top: 0.4rem; }
 
   .formulario {
     background: var(--hoja);
@@ -23,83 +39,132 @@
     padding: 1.1rem 1.1rem 1.2rem;
     margin-bottom: 2rem;
   }
-  .formulario h2 { font-size: 1.25rem; margin-bottom: 0.9rem; }
-  .pie-form { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-  .contador-letras { font-size: 0.85rem; color: var(--tinta-suave); }
+  .formulario h2 { font-size: 1.3rem; margin-bottom: 0.9rem; }
+  label.campo > span { font-size: 1.05rem; }
+  .nota-campo { display: block; font-size: 0.92rem; color: var(--tinta-suave); margin-top: 0.3rem; }
+  .boton.grande { width: 100%; font-size: 1.15rem; min-height: 56px; margin-top: 0.3rem; }
+  .contador-letras { display: block; text-align: right; font-size: 0.9rem; color: var(--alerta); margin-top: 0.3rem; }
 
-  .cabeza-lista { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
-  .cabeza-lista h2 { font-size: 1.25rem; }
+  .cabeza-lista h2 { font-size: 1.3rem; margin-bottom: 0.35rem; }
+  .cabeza-lista p { margin: 0 0 0.8rem; color: var(--tinta-suave); }
+  .ordenar { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; font-size: 0.95rem; color: var(--tinta-suave); }
   .vacio { text-align: center; padding: 2rem 1rem; color: var(--tinta-suave); border: 2px dashed var(--linea); border-radius: var(--radio); }
 
-  .espera { text-align: center; padding: 2.5rem 1rem; }
-  .espera .cuando { font-family: "Bitter", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: var(--pasto-hondo); margin: 0.5rem 0; }
-  .recien { animation: none; }
-  @media (prefers-reduced-motion: no-preference) {
-    .recien { animation: aparece 0.9s ease-out; }
-    @keyframes aparece { from { background: var(--paja-clara); } }
+  /* Botón de voto, más grande y con texto que cambia */
+  .voto { width: 5.4rem; padding: 0.6rem 0.3rem; gap: 0.15rem; }
+  .voto .mano { font-size: 1.25rem; line-height: 1; }
+  .voto .etiqueta { font-size: 0.85rem; font-weight: 700; color: var(--pasto); }
+  .voto[aria-pressed="true"] .etiqueta { color: var(--suelo); }
+  .voto.fijo .etiqueta { color: var(--tinta-suave); font-weight: 400; }
+
+  .pregunta .acciones-mias { margin-top: 0.5rem; }
+  .pregunta .marca-mia {
+    display: inline-block; font-size: 0.8rem; font-weight: 700;
+    background: var(--paja-clara); color: var(--suelo); border-radius: 999px; padding: 0.05rem 0.55rem; margin-bottom: 0.35rem;
   }
+  .enlace-borrar { background: none; border: none; padding: 0.3rem 0; color: var(--alerta); text-decoration: underline; cursor: pointer; font-size: 0.95rem; }
+
+  .espera { text-align: center; padding: 2rem 1rem; background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); }
+  .espera .cuando { font-family: "Bitter", Georgia, serif; font-size: 1.4rem; font-weight: 700; color: var(--pasto-hondo); margin: 0.5rem 0; }
+  .espera .falta { font-weight: 700; margin: 0.25rem 0 1rem; }
+
+  .cargando { padding: 2rem 0; }
+  .reintentar { margin-top: 0.8rem; }
+
+  .confirmacion {
+    position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 608px; margin: 0 auto;
+    background: var(--pasto); color: #fff; border-radius: 12px; padding: 0.9rem 1rem;
+    font-weight: 700; box-shadow: 0 12px 30px -12px rgba(0,0,0,0.5); z-index: 5;
+  }
+  @media (prefers-color-scheme: dark) { .confirmacion { color: #10170f; } }
+  .recien { outline: 3px solid var(--paja); outline-offset: 2px; }
 </style>
 </head>
 <body>
 <main>
-  <p class="marca">Regenera360 · Preguntas de la clase</p>
+  <p class="marca">🌱 Regenera360 · Preguntas de la clase</p>
 
-  <div id="cargando" class="ayuda">Cargando la sesión…</div>
-  <div id="error-general" class="aviso error oculto" role="alert"></div>
+  <div id="cargando" class="cargando">
+    <p id="texto-cargando" class="ayuda">Cargando…</p>
+  </div>
+  <div id="error-general" class="aviso error oculto" role="alert">
+    <p id="texto-error" style="margin:0"></p>
+    <button type="button" class="boton reintentar oculto" id="reintentar">Volver a intentar</button>
+  </div>
 
   <section id="sesion" class="oculto">
     <h1 id="titulo"></h1>
     <p id="estado" class="estado"></p>
 
     <div id="espera" class="espera oculto">
-      <p>Las preguntas de esta clase abren el</p>
+      <p style="margin:0">Las preguntas de esta clase se abren el</p>
       <p class="cuando" id="cuando-abre"></p>
-      <p class="ayuda">Guarda este enlace y vuelve ese día. La página se abre sola cuando llegue la hora.</p>
+      <p class="falta" id="falta"></p>
+      <p class="ayuda" style="margin:0">Guarda este enlace y vuelve ese día. Cuando llegue la hora, la página se abre sola.</p>
+    </div>
+
+    <div id="como" class="como oculto">
+      <h2>¿Cómo le hago?</h2>
+      <ol>
+        <li>Primero revisa abajo las preguntas de tus compañeros. Si alguna es igual a tu duda, toca <strong>👍 Yo también</strong>.</li>
+        <li>Si tu duda no está, escribe tu nombre y tu pregunta en el cuadro blanco y toca <strong>Enviar mi pregunta</strong>.</li>
+      </ol>
     </div>
 
     <form id="formulario" class="formulario oculto" novalidate>
-      <h2>Haz tu pregunta</h2>
-      <div id="aviso-form" class="aviso oculto" role="status"></div>
+      <h2>Escribe tu pregunta</h2>
+      <div id="aviso-form" class="aviso oculto" role="alert"></div>
       <label class="campo">
         <span>Tu nombre</span>
-        <input type="text" id="nombre" maxlength="80" autocomplete="name" required>
+        <input type="text" id="nombre" maxlength="80" autocomplete="name" placeholder="Ejemplo: Juan Pérez" required>
+        <small class="nota-campo">Tus compañeros también van a ver tu nombre.</small>
       </label>
       <label class="campo">
         <span>Tu pregunta</span>
-        <textarea id="texto" maxlength="1000" required></textarea>
+        <textarea id="texto" maxlength="1000" placeholder="Escribe aquí tu duda sobre la clase" required></textarea>
+        <small class="contador-letras oculto" id="letras"></small>
       </label>
-      <div class="pie-form">
-        <span class="contador-letras" id="letras">0 / 1000</span>
-        <button class="boton" type="submit" id="enviar">Enviar pregunta</button>
-      </div>
+      <button class="boton grande" type="submit" id="enviar">Enviar mi pregunta</button>
     </form>
 
     <section id="lista-zona" class="oculto" aria-labelledby="titulo-lista">
       <div class="cabeza-lista">
-        <h2 id="titulo-lista">Preguntas</h2>
+        <h2 id="titulo-lista">Preguntas de tus compañeros</h2>
+        <p id="ayuda-voto">¿Alguien ya preguntó lo mismo que tú? Toca <strong>👍 Yo también</strong> en esa pregunta. Si te equivocaste, tócalo otra vez para quitar tu voto.</p>
+      </div>
+      <div class="ordenar">
+        <span>Ver primero:</span>
         <div class="orden" role="group" aria-label="Ordenar preguntas">
-          <button type="button" data-orden="votos" aria-pressed="true">Más votadas</button>
-          <button type="button" data-orden="recientes" aria-pressed="false">Recientes</button>
+          <button type="button" data-orden="votos" aria-pressed="true">Las más votadas</button>
+          <button type="button" data-orden="recientes" aria-pressed="false">Las más nuevas</button>
         </div>
       </div>
-      <p class="ayuda" id="ayuda-voto" style="margin-top:-0.4rem">Si tienes la misma duda que alguien más, tócale "yo también" en vez de repetirla.</p>
       <div id="lista"></div>
     </section>
   </section>
 </main>
 
+<div id="confirmacion" class="confirmacion oculto" role="status"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
 (() => {
-  const sb = supabase.createClient(PR360.url, PR360.clave, { auth: { persistSession: false } });
   const $ = (id) => document.getElementById(id);
   const slug = (new URLSearchParams(location.search).get("c") || "").trim().toLowerCase();
-
   const leer = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
   const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const sinMovimiento = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Identificador de este navegador, para contar un voto por pregunta
+  if (!window.supabase || !window.PR360) {
+    $("cargando").classList.add("oculto");
+    $("texto-error").textContent = "La página no terminó de cargar. Revisa tu internet y vuelve a abrir el enlace.";
+    $("error-general").classList.remove("oculto");
+    return;
+  }
+  const sb = supabase.createClient(PR360.url, PR360.clave, { auth: { persistSession: false } });
+
+  // Identificador de este teléfono o computadora, para contar un voto por pregunta
   let votante = leer("pr360_votante");
   if (!votante) {
     votante = (crypto.randomUUID && crypto.randomUUID()) ||
@@ -109,34 +174,55 @@
   }
 
   let clase = null;
-  let desfase = 0;            // diferencia entre el reloj del servidor y el del teléfono
+  let desfase = 0;
   let preguntas = [];
   let orden = "votos";
+  let ordenVisible = [];      // ids en el orden en que se muestran; no se reacomoda solo
   let ultimaFirma = "";
   let recienEnviada = null;
   let temporizador = null;
 
   const ahora = () => Date.now() + desfase;
-  const fecha = new Intl.DateTimeFormat("es", {
-    weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZoneName: "short",
-  });
-  const fechaCorta = new Intl.DateTimeFormat("es", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
+  const fmtDia = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", month: "long" });
+  const fmtHora = new Intl.DateTimeFormat("es-MX", { hour: "numeric", minute: "2-digit", hour12: true });
+  const cuando = (iso) => { const d = new Date(iso); return `${fmtDia.format(d)} a las ${fmtHora.format(d)}`; };
 
   function haceCuanto(iso) {
     const s = Math.max(0, (ahora() - new Date(iso).getTime()) / 1000);
     if (s < 60) return "hace un momento";
     const m = Math.round(s / 60);
-    if (m < 60) return `hace ${m} min`;
+    if (m < 60) return m === 1 ? "hace 1 minuto" : `hace ${m} minutos`;
     const h = Math.round(m / 60);
-    if (h < 24) return `hace ${h} h`;
-    return fechaCorta.format(new Date(iso));
+    if (h < 24) return h === 1 ? "hace 1 hora" : `hace ${h} horas`;
+    return "el " + fmtDia.format(new Date(iso));
   }
 
-  function mostrarError(msg) {
+  function cuantoFalta(ms) {
+    const min = Math.ceil(ms / 60000);
+    if (min <= 1) return "Falta menos de un minuto.";
+    if (min < 60) return `Faltan ${min} minutos.`;
+    const h = Math.floor(min / 60), d = Math.floor(h / 24);
+    if (d >= 1) { const hr = h % 24; return `Faltan ${d} ${d === 1 ? "día" : "días"}${hr ? ` y ${hr} ${hr === 1 ? "hora" : "horas"}` : ""}.`; }
+    const mm = min % 60;
+    return `Faltan ${h} ${h === 1 ? "hora" : "horas"}${mm ? ` y ${mm} minutos` : ""}.`;
+  }
+
+  function confirmar(msg) {
+    const c = $("confirmacion"); c.textContent = msg; c.classList.remove("oculto");
+    clearTimeout(confirmar.t); confirmar.t = setTimeout(() => c.classList.add("oculto"), 4500);
+  }
+
+  function mostrarError(msg, conReintento) {
     $("cargando").classList.add("oculto");
-    $("error-general").textContent = msg;
+    $("texto-error").textContent = msg;
+    $("reintentar").classList.toggle("oculto", !conReintento);
     $("error-general").classList.remove("oculto");
   }
+  $("reintentar").addEventListener("click", () => {
+    $("error-general").classList.add("oculto");
+    $("cargando").classList.remove("oculto");
+    cargarClase();
+  });
 
   function fase() {
     const t = ahora();
@@ -146,10 +232,14 @@
   }
 
   async function cargarClase() {
-    if (!slug) return mostrarError("A este enlace le falta la clase. Pide el enlace completo a tu instructor.");
+    if (!slug) return mostrarError("A este enlace le falta una parte. Pídele el enlace completo a quien te lo mandó.");
+    const lento = setTimeout(() => {
+      $("texto-cargando").textContent = "Tu internet está lento. Seguimos intentando, espera un poco más…";
+    }, 6000);
     const { data, error } = await sb.rpc("obtener_clase", { p_slug: slug });
-    if (error) return mostrarError("No se pudo cargar la sesión. Revisa tu conexión y vuelve a abrir el enlace.");
-    if (!data) return mostrarError("No encontramos esta clase. Revisa que el enlace esté completo.");
+    clearTimeout(lento);
+    if (error) return mostrarError("No se pudo abrir la página. Revisa que tengas señal de internet y vuelve a intentar.", true);
+    if (!data) return mostrarError("No encontramos esta clase. Revisa que el enlace esté completo o pídelo de nuevo a quien te lo mandó.");
     clase = data;
     desfase = new Date(data.ahora).getTime() - Date.now();
     document.title = `${clase.titulo} · Preguntas Regenera360`;
@@ -163,35 +253,51 @@
     clearTimeout(temporizador);
     const f = fase();
     $("espera").classList.toggle("oculto", f !== "antes");
+    $("como").classList.toggle("oculto", f !== "abierta");
     $("formulario").classList.toggle("oculto", f !== "abierta");
     $("lista-zona").classList.toggle("oculto", f === "antes");
     $("ayuda-voto").classList.toggle("oculto", f !== "abierta");
 
     if (f === "antes") {
       $("estado").textContent = "";
-      $("cuando-abre").textContent = fecha.format(new Date(clase.abre_en));
+      $("cuando-abre").textContent = cuando(clase.abre_en);
       const falta = new Date(clase.abre_en).getTime() - ahora();
-      temporizador = setTimeout(pintarFase, Math.min(Math.max(falta + 500, 1000), 60000));
+      $("falta").textContent = cuantoFalta(falta);
+      temporizador = setTimeout(pintarFase, Math.min(Math.max(falta + 500, 1000), 30000));
       return;
     }
     if (f === "abierta") {
-      $("estado").innerHTML = "";
-      $("estado").append("Abierta para preguntas hasta el ");
+      $("estado").replaceChildren("Puedes mandar preguntas hasta el ");
       const s = document.createElement("strong");
-      s.textContent = fecha.format(new Date(clase.cierra_en));
-      $("estado").append(s, ".");
+      s.textContent = cuando(clase.cierra_en);
+      $("estado").append(s, " (hora de tu país).");
+      $("titulo-lista").textContent = "Preguntas de tus compañeros";
     } else {
-      $("estado").textContent = "Esta clase ya cerró. Puedes ver las preguntas, pero ya no se reciben nuevas ni votos.";
+      $("estado").textContent = "Esta clase ya cerró. Aquí puedes ver las preguntas que se hicieron, pero ya no se pueden mandar nuevas ni votar.";
+      $("titulo-lista").textContent = "Preguntas que se hicieron";
     }
     cargarPreguntas();
   }
 
-  async function cargarPreguntas() {
+  // Mantiene el orden que la persona ya está viendo; solo agrega las nuevas
+  function acomodar(reordenar) {
+    const porId = new Map(preguntas.map((p) => [p.id, p]));
+    const completo = [...preguntas].sort(orden === "votos"
+      ? (a, b) => b.votos - a.votos || new Date(a.creada_en) - new Date(b.creada_en)
+      : (a, b) => new Date(b.creada_en) - new Date(a.creada_en)).map((p) => p.id);
+    if (reordenar || !ordenVisible.length) { ordenVisible = completo; return; }
+    const quedan = ordenVisible.filter((id) => porId.has(id));
+    const nuevas = completo.filter((id) => !quedan.includes(id));
+    ordenVisible = orden === "votos" ? [...quedan, ...nuevas] : [...nuevas, ...quedan];
+  }
+
+  async function cargarPreguntas(reordenar) {
     clearTimeout(temporizador);
     const { data, error } = await sb.rpc("listar_preguntas", { p_slug: slug, p_votante: votante });
     if (!error) {
       preguntas = data || [];
-      const firma = JSON.stringify(preguntas) + orden;
+      acomodar(reordenar);
+      const firma = JSON.stringify(preguntas) + ordenVisible.join();
       if (firma !== ultimaFirma) { ultimaFirma = firma; pintarLista(); }
     }
     if (fase() === "abierta") {
@@ -204,17 +310,14 @@
     const abierta = fase() === "abierta";
     const lista = $("lista");
     const enfocada = document.activeElement && document.activeElement.dataset.id;
-    const items = [...preguntas].sort(orden === "votos"
-      ? (a, b) => b.votos - a.votos || new Date(a.creada_en) - new Date(b.creada_en)
-      : (a, b) => new Date(b.creada_en) - new Date(a.creada_en));
-
-    $("titulo-lista").textContent = items.length === 1 ? "1 pregunta" : `${items.length} preguntas`;
+    const porId = new Map(preguntas.map((p) => [p.id, p]));
+    const items = ordenVisible.map((id) => porId.get(id)).filter(Boolean);
     lista.replaceChildren();
 
     if (!items.length) {
       const v = document.createElement("p");
       v.className = "vacio";
-      v.textContent = abierta ? "Todavía no hay preguntas. La tuya puede ser la primera." : "Esta clase no recibió preguntas.";
+      v.textContent = abierta ? "Todavía nadie ha preguntado. Tu pregunta puede ser la primera." : "En esta clase no se hicieron preguntas.";
       lista.append(v);
       return;
     }
@@ -222,37 +325,52 @@
     for (const p of items) {
       const art = document.createElement("article");
       art.className = "pregunta" + (p.id === recienEnviada ? " recien" : "");
+      art.id = "p-" + p.id;
 
       const b = document.createElement("button");
       b.type = "button";
       b.className = "voto";
       b.dataset.id = p.id;
+      const mano = document.createElement("span"); mano.className = "mano"; mano.setAttribute("aria-hidden", "true");
       const n = document.createElement("span"); n.className = "numero"; n.textContent = p.votos;
       const e = document.createElement("span"); e.className = "etiqueta";
       if (p.mia) {
         b.classList.add("fijo"); b.disabled = true;
+        mano.textContent = "";
         e.textContent = p.votos === 1 ? "voto" : "votos";
-        b.setAttribute("aria-label", `Tu pregunta, ${p.votos} votos`);
+        b.setAttribute("aria-label", `Tu pregunta. ${p.votos} personas tienen la misma duda`);
+        b.title = "Cuántas personas tienen la misma duda que tú";
       } else {
         b.setAttribute("aria-pressed", p.mi_voto ? "true" : "false");
-        e.textContent = "yo también";
-        b.setAttribute("aria-label", `Yo también tengo esta duda. ${p.votos} votos`);
+        mano.textContent = p.mi_voto ? "✅" : "👍";
+        e.textContent = p.mi_voto ? "Ya votaste" : "Yo también";
+        b.setAttribute("aria-label", p.mi_voto
+          ? `Ya votaste por esta pregunta. ${p.votos} votos. Toca para quitar tu voto`
+          : `Yo también tengo esta duda. ${p.votos} votos`);
         if (!abierta) b.disabled = true;
         else b.addEventListener("click", () => votar(p, b));
       }
-      b.append(n, e);
+      b.append(mano, n, e);
 
       const cuerpo = document.createElement("div"); cuerpo.className = "cuerpo";
+      if (p.mia) { const m = document.createElement("span"); m.className = "marca-mia"; m.textContent = "Tu pregunta"; cuerpo.append(m); }
       const t = document.createElement("p"); t.className = "texto"; t.textContent = p.texto;
       const q = document.createElement("p"); q.className = "quien";
       const nom = document.createElement("strong"); nom.textContent = p.nombre;
-      q.append(nom, ` · ${haceCuanto(p.creada_en)}${p.mia ? " · tu pregunta" : ""}`);
+      q.append(nom, `, ${haceCuanto(p.creada_en)}`);
       cuerpo.append(t, q);
+      if (p.mia && abierta) {
+        const acc = document.createElement("div"); acc.className = "acciones-mias";
+        const borrar = document.createElement("button"); borrar.type = "button"; borrar.className = "enlace-borrar";
+        borrar.textContent = "Me equivoqué, borrar mi pregunta";
+        borrar.addEventListener("click", () => borrarMia(p));
+        acc.append(borrar); cuerpo.append(acc);
+      }
 
       art.append(b, cuerpo);
       lista.append(art);
     }
-    if (enfocada) { const el = lista.querySelector(`[data-id="${enfocada}"]`); if (el) el.focus(); }
+    if (enfocada) { const el = lista.querySelector(`[data-id="${enfocada}"]`); if (el) el.focus({ preventScroll: true }); }
   }
 
   async function votar(p, boton) {
@@ -261,18 +379,32 @@
     if (error) {
       boton.disabled = false;
       if (/clase_cerrada/.test(error.message)) return pintarFase();
-      return;
+      return confirmar("No se guardó tu voto. Revisa tu internet y vuelve a tocar.");
     }
     p.votos = data.votos; p.mi_voto = data.mi_voto;
-    ultimaFirma = JSON.stringify(preguntas) + orden;
+    ultimaFirma = "";
     pintarLista();
     const nuevo = $("lista").querySelector(`[data-id="${p.id}"]`);
-    if (nuevo) { nuevo.classList.add("latido"); nuevo.focus(); }
+    if (nuevo) { nuevo.classList.add("latido"); nuevo.focus({ preventScroll: true }); }
+    confirmar(data.mi_voto ? "👍 Listo, contamos tu voto." : "Quitaste tu voto de esa pregunta.");
+  }
+
+  async function borrarMia(p) {
+    if (!confirm("¿Seguro que quieres borrar tu pregunta? Si quieres, después la puedes escribir otra vez.")) return;
+    const { error } = await sb.rpc("borrar_mi_pregunta", { p_pregunta: p.id, p_votante: votante });
+    if (error) return confirmar("No se pudo borrar. Revisa tu internet y vuelve a intentar.");
+    confirmar("Borramos tu pregunta.");
+    cargarPreguntas();
   }
 
   // Formulario
   $("nombre").value = leer("pr360_nombre") || "";
-  $("texto").addEventListener("input", () => { $("letras").textContent = `${$("texto").value.length} / 1000`; });
+  $("texto").addEventListener("input", () => {
+    const n = $("texto").value.length;
+    const c = $("letras");
+    c.classList.toggle("oculto", n < 850);
+    c.textContent = n >= 1000 ? "Llegaste al máximo de letras." : `Te quedan ${1000 - n} letras.`;
+  });
 
   function avisoForm(msg, esError) {
     const a = $("aviso-form");
@@ -283,36 +415,40 @@
 
   $("formulario").addEventListener("submit", async (ev) => {
     ev.preventDefault();
+    $("aviso-form").classList.add("oculto");
     const nombre = $("nombre").value.trim();
     const texto = $("texto").value.trim();
-    if (!nombre) { avisoForm("Escribe tu nombre para que sepamos de quién es la pregunta.", true); return $("nombre").focus(); }
-    if (texto.length < 3) { avisoForm("Escribe tu pregunta antes de enviarla.", true); return $("texto").focus(); }
+    if (!nombre) { avisoForm("Falta tu nombre. Escríbelo en el primer cuadro.", true); return $("nombre").focus(); }
+    if (texto.length < 3) { avisoForm("Falta tu pregunta. Escríbela en el segundo cuadro.", true); return $("texto").focus(); }
 
     $("enviar").disabled = true;
-    $("enviar").textContent = "Enviando…";
+    $("enviar").textContent = "Enviando, espera tantito…";
     const { data, error } = await sb.rpc("enviar_pregunta", { p_slug: slug, p_nombre: nombre, p_texto: texto, p_votante: votante });
     $("enviar").disabled = false;
-    $("enviar").textContent = "Enviar pregunta";
+    $("enviar").textContent = "Enviar mi pregunta";
 
     if (error) {
       const m = error.message || "";
       if (/clase_cerrada/.test(m)) { avisoForm("La clase acaba de cerrar y ya no recibe preguntas.", true); return pintarFase(); }
       if (/clase_no_abierta/.test(m)) { avisoForm("Esta clase todavía no abre.", true); return pintarFase(); }
-      if (/demasiadas_preguntas/.test(m)) return avisoForm("Enviaste varias preguntas muy seguidas. Espera unos minutos y vuelve a intentar.", true);
-      return avisoForm("No se pudo enviar. Revisa tu conexión y vuelve a intentar; tu texto sigue aquí.", true);
+      if (/demasiadas_preguntas/.test(m)) return avisoForm("Mandaste varias preguntas muy seguido. Espera unos minutos y vuelve a intentar.", true);
+      return avisoForm("No se pudo enviar. Revisa que tengas señal y vuelve a tocar el botón. Tu pregunta sigue escrita aquí, no se perdió.", true);
     }
     guardar("pr360_nombre", nombre);
     $("texto").value = "";
-    $("letras").textContent = "0 / 1000";
+    $("letras").classList.add("oculto");
     recienEnviada = data;
-    setTimeout(() => { recienEnviada = null; }, 3000);
-    avisoForm("Listo, tu pregunta ya está en la lista.");
-    await cargarPreguntas();
+    await cargarPreguntas(true);
+    const tarjeta = document.getElementById("p-" + data);
+    if (tarjeta) tarjeta.scrollIntoView({ behavior: sinMovimiento ? "auto" : "smooth", block: "center" });
+    confirmar("✅ ¡Listo! Tu pregunta se envió. Aquí la puedes ver.");
+    setTimeout(() => { recienEnviada = null; ultimaFirma = ""; pintarLista(); }, 5000);
   });
 
   document.querySelectorAll(".orden button").forEach((b) => b.addEventListener("click", () => {
     orden = b.dataset.orden;
     document.querySelectorAll(".orden button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+    acomodar(true);
     ultimaFirma = "";
     pintarLista();
   }));
