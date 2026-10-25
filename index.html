@@ -48,6 +48,9 @@
   .cabeza-lista h2 { font-size: 1.3rem; margin-bottom: 0.35rem; }
   .cabeza-lista p { margin: 0 0 0.8rem; color: var(--tinta-suave); }
   .ordenar { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; font-size: 0.95rem; color: var(--tinta-suave); }
+  #resumen-lista { color: var(--tinta); }
+  #resumen-lista a { font-weight: 700; }
+  #formulario { margin-top: 2rem; scroll-margin-top: 1rem; }
   .vacio { text-align: center; padding: 2rem 1rem; color: var(--tinta-suave); border: 2px dashed var(--linea); border-radius: var(--radio); }
 
   /* Botón de voto, más grande y con texto que cambia */
@@ -106,13 +109,29 @@
     <div id="como" class="como oculto">
       <h2>¿Cómo le hago?</h2>
       <ol>
-        <li>Primero revisa abajo las preguntas de tus compañeros. Si alguna es igual a tu duda, toca <strong>👍 Yo también</strong>.</li>
-        <li>Si tu duda no está, escribe tu nombre y tu pregunta en el cuadro blanco y toca <strong>Enviar mi pregunta</strong>.</li>
+        <li>Lee las preguntas de tus compañeros. Si alguna es igual a tu duda, toca <strong>👍 Yo también</strong>.</li>
+        <li>Si tu duda no está, baja hasta el final de la página. Ahí escribes tu nombre y tu pregunta, y tocas <strong>Enviar mi pregunta</strong>.</li>
       </ol>
     </div>
 
+
+    <section id="lista-zona" class="oculto" aria-labelledby="titulo-lista">
+      <div class="cabeza-lista">
+        <h2 id="titulo-lista">Preguntas de tus compañeros</h2>
+        <p id="resumen-lista" class="oculto"></p>
+        <p id="ayuda-voto">¿Alguien ya preguntó lo mismo que tú? Toca <strong>👍 Yo también</strong> en esa pregunta. Si te equivocaste, tócalo otra vez para quitar tu voto.</p>
+      </div>
+      <div class="ordenar">
+        <span>Ver primero:</span>
+        <div class="orden" role="group" aria-label="Ordenar preguntas">
+          <button type="button" data-orden="votos" aria-pressed="true">Las más votadas</button>
+          <button type="button" data-orden="recientes" aria-pressed="false">Las más nuevas</button>
+        </div>
+      </div>
+      <div id="lista"></div>
+    </section>
     <form id="formulario" class="formulario oculto" novalidate>
-      <h2>Escribe tu pregunta</h2>
+      <h2>¿Tu duda no está en la lista? Escríbela aquí</h2>
       <div id="aviso-form" class="aviso oculto" role="alert"></div>
       <label class="campo">
         <span>Tu nombre</span>
@@ -126,21 +145,6 @@
       </label>
       <button class="boton grande" type="submit" id="enviar">Enviar mi pregunta</button>
     </form>
-
-    <section id="lista-zona" class="oculto" aria-labelledby="titulo-lista">
-      <div class="cabeza-lista">
-        <h2 id="titulo-lista">Preguntas de tus compañeros</h2>
-        <p id="ayuda-voto">¿Alguien ya preguntó lo mismo que tú? Toca <strong>👍 Yo también</strong> en esa pregunta. Si te equivocaste, tócalo otra vez para quitar tu voto.</p>
-      </div>
-      <div class="ordenar">
-        <span>Ver primero:</span>
-        <div class="orden" role="group" aria-label="Ordenar preguntas">
-          <button type="button" data-orden="votos" aria-pressed="true">Las más votadas</button>
-          <button type="button" data-orden="recientes" aria-pressed="false">Las más nuevas</button>
-        </div>
-      </div>
-      <div id="lista"></div>
-    </section>
   </section>
 </main>
 
@@ -314,10 +318,21 @@
     const items = ordenVisible.map((id) => porId.get(id)).filter(Boolean);
     lista.replaceChildren();
 
+    const resumen = $("resumen-lista");
+    resumen.classList.toggle("oculto", !(abierta && items.length >= 3));
+    if (abierta && items.length >= 3) {
+      resumen.replaceChildren(`Hay ${items.length} preguntas. Léelas y vota por las que compartas. El cuadro para escribir la tuya está hasta abajo. `);
+      const a = document.createElement("a"); a.href = "#formulario"; a.textContent = "Bajar a escribir mi pregunta";
+      a.addEventListener("click", (ev) => { ev.preventDefault(); $("formulario").scrollIntoView({ behavior: sinMovimiento ? "auto" : "smooth" }); setTimeout(() => $("nombre").value ? $("texto").focus({ preventScroll: true }) : $("nombre").focus({ preventScroll: true }), 400); });
+      resumen.append(a, ".");
+    }
+    $("ayuda-voto").classList.toggle("oculto", !(abierta && items.length));
+    $("como").classList.toggle("oculto", !(abierta && items.length));
+
     if (!items.length) {
       const v = document.createElement("p");
       v.className = "vacio";
-      v.textContent = abierta ? "Todavía nadie ha preguntado. Tu pregunta puede ser la primera." : "En esta clase no se hicieron preguntas.";
+      v.textContent = abierta ? "Todavía nadie ha preguntado. Escribe la tuya aquí abajo, puede ser la primera." : "En esta clase no se hicieron preguntas.";
       lista.append(v);
       return;
     }
