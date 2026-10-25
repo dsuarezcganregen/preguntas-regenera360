@@ -75,7 +75,7 @@
   .filtros { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.9rem; }
 
   .fila {
-    display: grid; grid-template-columns: auto auto 1fr auto; gap: 0.9rem; align-items: start;
+    display: grid; grid-template-columns: auto auto 1fr; gap: 0.9rem; align-items: start;
     background: var(--hoja); border-radius: var(--radio); padding: 0.9rem 1rem; box-shadow: var(--sombra);
   }
   .fila + .fila { margin-top: 0.6rem; }
@@ -94,7 +94,6 @@
     .fila { grid-template-columns: auto 1fr; }
     .fila .conteo { grid-column: 1; grid-row: 2; }
     .fila .cuerpo { grid-column: 2; grid-row: 1 / span 2; }
-    .fila .borrar { grid-column: 2; justify-self: end; }
   }
 
   dialog {
@@ -108,6 +107,34 @@
   .pie-dialogo { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem; }
   .prefijo { display: flex; align-items: center; gap: 0.3rem; }
   .prefijo small { color: var(--tinta-suave); white-space: nowrap; }
+
+  .bandeja-btn {
+    width: 100%; text-align: left; cursor: pointer; margin-bottom: 1rem;
+    background: var(--paja-clara); border: 2px solid transparent; border-radius: 12px;
+    padding: 0.7rem 0.85rem; font-weight: 700; color: var(--suelo);
+  }
+  .bandeja-btn[aria-current="true"] { border-color: var(--paja); }
+  .bandeja-btn .n { float: right; background: var(--paja); color: #2a2110; border-radius: 999px; padding: 0 0.55rem; }
+  .acciones-fila { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin-top: 0.45rem; }
+  .accion { background: none; border: none; padding: 0.2rem 0; color: var(--pasto); cursor: pointer; font-size: 0.88rem; text-decoration: underline; }
+  .accion.peligro { color: var(--tinta-suave); }
+  .accion.peligro:hover { color: var(--alerta); }
+  .etiquetas { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.35rem; }
+  .etq { font-size: 0.78rem; font-weight: 700; border-radius: 999px; padding: 0.05rem 0.55rem; background: var(--pasto-claro); color: var(--pasto-hondo); }
+  .etq.origen { background: var(--paja-clara); color: var(--suelo); }
+  .sugerencia { margin-top: 0.55rem; padding: 0.55rem 0.7rem; border-radius: 10px; background: var(--paja-clara); font-size: 0.92rem; }
+  .sugerencia p { margin: 0 0 0.35rem; }
+  .sugerencia .botones { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .juntadas { margin-top: 0.5rem; padding-left: 0.75rem; border-left: 3px solid var(--linea); font-size: 0.9rem; color: var(--tinta-suave); }
+  .juntadas p { margin: 0.25rem 0; }
+  .seccion-fuera { margin-top: 1.75rem; }
+  .seccion-fuera h3 { font-family: "Bitter", Georgia, serif; font-size: 1.05rem; margin: 0 0 0.6rem; }
+  .ubicar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.6rem; }
+  .ubicar select { font: inherit; padding: 0.45rem 0.6rem; border: 1.5px solid var(--linea); border-radius: 8px; background: var(--hoja); max-width: 100%; }
+  .opciones-juntar { max-height: 50vh; overflow: auto; margin: 0 0 1rem; }
+  .opciones-juntar label { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.55rem; border-radius: 8px; cursor: pointer; }
+  .opciones-juntar label:hover { background: var(--pasto-claro); }
+  .opciones-juntar input { margin-top: 0.3rem; }
 
   .toast {
     position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
@@ -146,6 +173,7 @@
         <h2>Clases</h2>
         <button class="boton chico" id="nueva-clase" type="button">Nueva clase</button>
       </div>
+      <button type="button" class="bandeja-btn oculto" id="btn-bandeja">📥 Preguntas por ubicar <span class="n" id="n-bandeja">0</span></button>
       <ul class="clases" id="clases"></ul>
       <details class="archivadas oculto" id="zona-archivadas">
         <summary id="titulo-archivadas">Archivadas</summary>
@@ -189,6 +217,19 @@
   </form>
 </dialog>
 
+<dialog id="dialogo-juntar">
+  <form method="dialog" id="form-juntar">
+    <h2>Juntar con otra pregunta</h2>
+    <p class="ayuda" id="juntar-de" style="margin-top:-0.5rem"></p>
+    <p style="margin:0 0 0.6rem">¿Con cuál es igual? Esta se va a guardar dentro de la que elijas y sus votos se suman.</p>
+    <div class="opciones-juntar" id="opciones-juntar"></div>
+    <div class="pie-dialogo">
+      <button class="boton secundario" type="button" id="cancelar-juntar">Cancelar</button>
+      <button class="boton" type="submit" id="confirmar-juntar">Juntar</button>
+    </div>
+  </form>
+</dialog>
+
 <div id="toast" class="toast oculto" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
@@ -201,7 +242,9 @@
 
   let clases = [];
   let conteos = {};           // clase_id -> { total, pendientes }
-  let seleccionada = null;    // id de clase
+  let seleccionada = null;    // id de clase, o "bandeja"
+  let porUbicar = [];         // preguntas marcadas como fuera de tema, de todas las clases
+  let ordenAdmin = "votos";
   let preguntas = [];
   let filtro = "pendientes";
   let editando = null;        // clase en edición, o null si es nueva
@@ -291,16 +334,19 @@
   async function cargarClases() {
     const [{ data: cs, error: e1 }, { data: ps, error: e2 }] = await Promise.all([
       sb.from("clases").select("*").order("abre_en", { ascending: true }).order("cierra_en", { ascending: true }),
-      sb.from("preguntas").select("clase_id, respondida"),
+      sb.from("preguntas").select("clase_id, respondida, fusionada_en, fuera_de_tema"),
     ]);
     if (e1 || e2) return toast("No se pudieron cargar las clases. Recarga la página.");
     clases = cs || [];
     conteos = {};
     for (const p of ps || []) {
+      if (p.fusionada_en || p.fuera_de_tema) continue;
       const c = (conteos[p.clase_id] ||= { total: 0, pendientes: 0 });
       c.total++; if (!p.respondida) c.pendientes++;
     }
-    if (!seleccionada || !clases.some((c) => c.id === seleccionada)) {
+    await cargarBandeja();
+    if (seleccionada === "bandeja" && !porUbicar.length) seleccionada = null;
+    if (seleccionada !== "bandeja" && (!seleccionada || !clases.some((c) => c.id === seleccionada))) {
       seleccionada = (clases.find((c) => fase(c) === "abierta") || clases.find((c) => !c.archivada) || clases[0] || {}).id || null;
     }
     pintarClases();
@@ -323,7 +369,19 @@
     return li;
   }
 
+  async function cargarBandeja() {
+    const { data } = await sb.from("preguntas")
+      .select("id, clase_id, nombre, texto, votos, sugerencia_clase_id, nota_sugerencia, creada_en")
+      .eq("fuera_de_tema", true).is("fusionada_en", null).order("creada_en", { ascending: true });
+    porUbicar = data || [];
+    $("btn-bandeja").classList.toggle("oculto", !porUbicar.length);
+    $("n-bandeja").textContent = porUbicar.length;
+    $("btn-bandeja").setAttribute("aria-current", seleccionada === "bandeja" ? "true" : "false");
+  }
+  $("btn-bandeja").addEventListener("click", () => { seleccionada = "bandeja"; pintarClases(); pintarDetalle(); });
+
   function pintarClases() {
+    $("btn-bandeja").setAttribute("aria-current", seleccionada === "bandeja" ? "true" : "false");
     const activas = clases.filter((c) => !c.archivada);
     const archivadas = clases.filter((c) => c.archivada);
     const ul = $("clases"); ul.replaceChildren();
@@ -345,14 +403,15 @@
   // ---------- Preguntas ----------
   async function cargarPreguntas() {
     clearTimeout(sondeo);
-    if (!seleccionada) { preguntas = []; return pintarDetalle(); }
+    if (!seleccionada || seleccionada === "bandeja") { preguntas = []; return pintarDetalle(); }
     const { data, error } = await sb.from("preguntas")
-      .select("id, nombre, texto, votos, respondida, respondida_en, creada_en")
+      .select("id, nombre, texto, votos, respondida, respondida_en, creada_en, tema, fuera_de_tema, sugerida_fuera, sugerencia_clase_id, nota_sugerencia, sugerida_duplicada_de, fusionada_en, movida_desde")
       .eq("clase_id", seleccionada)
       .order("votos", { ascending: false }).order("creada_en", { ascending: true });
     if (!error) {
       preguntas = data || [];
-      const n = { total: preguntas.length, pendientes: preguntas.filter((p) => !p.respondida).length };
+      const vivas = preguntas.filter((p) => !p.fusionada_en && !p.fuera_de_tema);
+      const n = { total: vivas.length, pendientes: vivas.filter((p) => !p.respondida).length };
       const antes = conteos[seleccionada];
       conteos[seleccionada] = n;
       if (!antes || antes.total !== n.total || antes.pendientes !== n.pendientes) pintarClases();
@@ -367,6 +426,7 @@
     const c = clases.find((x) => x.id === seleccionada);
     const foco = document.activeElement && document.activeElement.dataset.id;
     zona.replaceChildren();
+    if (seleccionada === "bandeja") return pintarBandeja(zona);
     if (!c) {
       zona.append(el("div", "detalle-vacio", "Crea una clase para empezar a recibir preguntas."));
       return;
@@ -390,11 +450,25 @@
       try { await navigator.clipboard.writeText(url); toast("Enlace copiado"); }
       catch { prompt("Copia el enlace:", url); }
     });
+    const wa = el("button", "boton secundario chico", "Copiar mensaje para WhatsApp"); wa.type = "button";
+    wa.addEventListener("click", async () => {
+      const m = mensajeWhatsApp(c, url);
+      try { await navigator.clipboard.writeText(m); toast("Mensaje copiado. Pégalo en el grupo de WhatsApp."); }
+      catch { prompt("Copia el mensaje:", m); }
+    });
     const abrir = el("a", "boton secundario chico", "Ver como alumno"); abrir.href = url; abrir.target = "_blank"; abrir.rel = "noopener";
-    caja.append(copiar, abrir);
+    caja.append(copiar, wa, abrir);
     zona.append(caja);
 
     const acc = el("div", "acciones");
+    const zoom = el("a", "boton chico", "Abrir pantalla para Zoom");
+    zoom.href = new URL("./sesion.html?c=" + encodeURIComponent(c.slug), location.href.split("#")[0].split("?")[0]).href;
+    zoom.target = "_blank"; zoom.rel = "noopener";
+    acc.append(zoom);
+    if (c.resumen_url) {
+      const res = el("a", "boton secundario chico", "Ver resumen en Notion"); res.href = c.resumen_url; res.target = "_blank"; res.rel = "noopener";
+      acc.append(res);
+    }
     const editar = el("button", "boton secundario chico", "Editar clase"); editar.type = "button";
     editar.addEventListener("click", () => abrirDialogo(c));
     const csv = el("button", "boton secundario chico", "Descargar preguntas (CSV)"); csv.type = "button";
@@ -407,30 +481,55 @@
     acc.append(editar, csv, archivar, borrar);
     zona.append(acc);
 
-    const pend = preguntas.filter((p) => !p.respondida).length;
-    const resp = preguntas.length - pend;
+    const vivas = preguntas.filter((p) => !p.fusionada_en && !p.fuera_de_tema);
+    const fuera = preguntas.filter((p) => !p.fusionada_en && p.fuera_de_tema);
+    const juntadasEn = {};
+    for (const p of preguntas) if (p.fusionada_en) (juntadasEn[p.fusionada_en] ||= []).push(p);
+    const pend = vivas.filter((p) => !p.respondida).length;
+    const resp = vivas.length - pend;
     const filtros = el("div", "filtros");
-    filtros.append(el("h2", null, pend === 0 && preguntas.length ? "Todas respondidas" : `${pend} por responder`));
+    filtros.append(el("h2", null, pend === 0 && vivas.length ? "Todas respondidas" : `${pend} por responder`));
     const grupo = el("div", "orden"); grupo.setAttribute("role", "group"); grupo.setAttribute("aria-label", "Filtrar preguntas");
-    for (const [k, txt] of [["pendientes", `Pendientes (${pend})`], ["respondidas", `Respondidas (${resp})`], ["todas", `Todas (${preguntas.length})`]]) {
+    for (const [k, txt] of [["pendientes", `Pendientes (${pend})`], ["respondidas", `Respondidas (${resp})`], ["todas", `Todas (${vivas.length})`]]) {
       const b = el("button", null, txt); b.type = "button";
       b.setAttribute("aria-pressed", filtro === k ? "true" : "false");
       b.addEventListener("click", () => { filtro = k; pintarDetalle(); });
       grupo.append(b);
     }
     filtros.append(grupo);
+    const hayTemas = vivas.some((p) => p.tema);
+    if (hayTemas) {
+      const og = el("div", "orden"); og.setAttribute("role", "group"); og.setAttribute("aria-label", "Ordenar");
+      for (const [k, txt] of [["votos", "Por votos"], ["tema", "Por tema"]]) {
+        const b = el("button", null, txt); b.type = "button";
+        b.setAttribute("aria-pressed", ordenAdmin === k ? "true" : "false");
+        b.addEventListener("click", () => { ordenAdmin = k; pintarDetalle(); });
+        og.append(b);
+      }
+      filtros.append(og);
+    }
     zona.append(filtros);
 
-    const visibles = preguntas.filter((p) => filtro === "todas" || (filtro === "pendientes" ? !p.respondida : p.respondida));
+    let visibles = vivas.filter((p) => filtro === "todas" || (filtro === "pendientes" ? !p.respondida : p.respondida));
+    if (hayTemas && ordenAdmin === "tema") {
+      visibles = [...visibles].sort((a, b) => (a.tema || "zzz").localeCompare(b.tema || "zzz", "es") || b.votos - a.votos);
+    }
     if (!visibles.length) {
-      const msg = !preguntas.length
+      const msg = !vivas.length
         ? (f === "antes" ? "La clase todavía no abre. Comparte el enlace con tus alumnos desde ya." : "Todavía no llegan preguntas.")
         : filtro === "pendientes" ? "No queda nada pendiente en esta clase." : "Todavía no marcas ninguna como respondida.";
       zona.append(el("div", "detalle-vacio", msg));
+      pintarFuera(zona, fuera);
       return;
     }
 
+    let temaActual = null;
     for (const p of visibles) {
+      if (hayTemas && ordenAdmin === "tema" && (p.tema || "Sin tema") !== temaActual) {
+        temaActual = p.tema || "Sin tema";
+        const h = el("h3", null, temaActual); h.style.cssText = "font-family:Bitter,Georgia,serif;font-size:1.05rem;margin:1.2rem 0 0.5rem";
+        zona.append(h);
+      }
       const fila = el("article", "fila" + (p.respondida ? " hecha" : ""));
 
       const marcar = el("label", "marcar");
@@ -442,19 +541,201 @@
       conteo.append(el("span", "numero", p.votos), el("span", "etiqueta", p.votos === 1 ? "voto" : "votos"));
 
       const cuerpo = el("div", "cuerpo");
+      const etqs = el("div", "etiquetas");
+      if (p.tema) etqs.append(el("span", "etq", p.tema));
+      if (p.movida_desde) etqs.append(el("span", "etq origen", "Llegó desde " + tituloDe(p.movida_desde)));
+      if (etqs.childElementCount) cuerpo.append(etqs);
       cuerpo.append(el("p", "texto", p.texto));
       const quien = el("p", "quien");
       quien.append(el("strong", null, p.nombre), ` · ${fmt.format(new Date(p.creada_en))}`);
       cuerpo.append(quien);
 
-      const borrarP = el("button", "borrar", "Borrar"); borrarP.type = "button";
-      borrarP.addEventListener("click", () => borrarPregunta(p));
+      const pegadas = juntadasEn[p.id] || [];
+      if (pegadas.length) {
+        const j = el("div", "juntadas");
+        j.append(el("p", null, pegadas.length === 1 ? "Se juntó aquí 1 pregunta igual:" : `Se juntaron aquí ${pegadas.length} preguntas iguales:`));
+        for (const q of pegadas) {
+          const l = el("p");
+          l.append(`"${q.texto}", de ${q.nombre}. `);
+          const sep = el("button", "accion", "Separar"); sep.type = "button";
+          sep.addEventListener("click", () => separar(q));
+          l.append(sep); j.append(l);
+        }
+        cuerpo.append(j);
+      }
 
-      fila.append(marcar, conteo, cuerpo, borrarP);
+      if (p.sugerida_fuera) {
+        const sg = el("div", "sugerencia");
+        const destino = p.sugerencia_clase_id ? tituloDe(p.sugerencia_clase_id) : null;
+        sg.append(el("p", null, `🔎 Sugerencia del resumen: parece de otro tema${destino ? `, quizá de "${destino}"` : ""}.${p.nota_sugerencia ? " " + p.nota_sugerencia : ""}`));
+        const bs = el("div", "botones");
+        const si = el("button", "boton chico", "Sí, no es del tema"); si.type = "button";
+        si.addEventListener("click", () => marcarFuera(p, true));
+        const no = el("button", "boton secundario chico", "No, sí es del tema"); no.type = "button";
+        no.addEventListener("click", () => descartarSugerencia(p, "fuera"));
+        bs.append(si, no); sg.append(bs); cuerpo.append(sg);
+      }
+
+      const gemela = p.sugerida_duplicada_de && vivas.find((x) => x.id === p.sugerida_duplicada_de);
+      if (gemela) {
+        const sg = el("div", "sugerencia");
+        sg.append(el("p", null, `🔁 Sugerencia del resumen: parece igual a "${gemela.texto}", de ${gemela.nombre}.`));
+        const bs = el("div", "botones");
+        const si = el("button", "boton chico", "Juntarlas"); si.type = "button";
+        si.addEventListener("click", () => juntar(gemela.votos >= p.votos ? gemela : p, gemela.votos >= p.votos ? p : gemela));
+        const no = el("button", "boton secundario chico", "Son distintas"); no.type = "button";
+        no.addEventListener("click", () => descartarSugerencia(p, "duplicada"));
+        bs.append(si, no); sg.append(bs); cuerpo.append(sg);
+      }
+
+      const acciones = el("div", "acciones-fila");
+      const bFuera = el("button", "accion", "No es del tema"); bFuera.type = "button";
+      bFuera.addEventListener("click", () => marcarFuera(p, true));
+      const bJuntar = el("button", "accion", "Juntar con otra"); bJuntar.type = "button";
+      bJuntar.disabled = vivas.length < 2;
+      bJuntar.addEventListener("click", () => abrirJuntar(p, vivas));
+      const borrarP = el("button", "accion peligro", "Borrar"); borrarP.type = "button";
+      borrarP.addEventListener("click", () => borrarPregunta(p));
+      acciones.append(bFuera, bJuntar, borrarP);
+      cuerpo.append(acciones);
+
+      fila.append(marcar, conteo, cuerpo);
       zona.append(fila);
     }
+    pintarFuera(zona, fuera);
     if (foco) { const x = zona.querySelector(`[data-id="${foco}"]`); if (x) x.focus(); }
   }
+
+  const tituloDe = (id) => (clases.find((c) => c.id === id) || {}).titulo || "otra clase";
+  const fmtMx = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/Mexico_City" });
+
+  function mensajeWhatsApp(c, url) {
+    const f = fase(c);
+    if (f === "antes") {
+      return `🌱 *${c.titulo}*\n\nGuarda este enlace para dejar tus preguntas de esta clase. Se abre el ${fmtMx.format(new Date(c.abre_en))} y recibimos preguntas hasta el ${fmtMx.format(new Date(c.cierra_en))} (hora de Ciudad de México).\n\n👉 ${url}`;
+    }
+    if (f === "abierta") {
+      return `🌱 Ya está abierto el formulario de preguntas de *${c.titulo}*.\n\nEntra, revisa las preguntas de tus compañeros y toca 👍 en las que compartas. Si tu duda no está, escríbela al final de la página.\n\n👉 ${url}\n\nRecibimos preguntas hasta el ${fmtMx.format(new Date(c.cierra_en))} (hora de Ciudad de México).`;
+    }
+    return `🌱 Estas son las preguntas que se hicieron en *${c.titulo}*:\n\n👉 ${url}`;
+  }
+
+  function pintarFuera(zona, fuera) {
+    if (!fuera.length) return;
+    const s = el("section", "seccion-fuera");
+    s.append(el("h3", null, `Marcadas como fuera de tema (${fuera.length})`));
+    s.append(el("p", "ayuda", "Están en la bandeja de Preguntas por ubicar. No salen en la pantalla para Zoom ni en el resumen de esta sesión. Los alumnos todavía las ven aquí hasta que las muevas."));
+    for (const p of fuera) {
+      const f = el("article", "fila hecha");
+      const c = el("div", "conteo"); c.append(el("span", "numero", p.votos), el("span", "etiqueta", p.votos === 1 ? "voto" : "votos"));
+      const cu = el("div", "cuerpo");
+      cu.append(el("p", "texto", p.texto));
+      const q = el("p", "quien"); q.append(el("strong", null, p.nombre)); cu.append(q);
+      const a = el("div", "acciones-fila");
+      const reg = el("button", "accion", "Sí es del tema, regresarla"); reg.type = "button";
+      reg.addEventListener("click", () => marcarFuera(p, false));
+      a.append(reg); cu.append(a);
+      f.append(el("span"), c, cu);
+      s.append(f);
+    }
+    zona.append(s);
+  }
+
+  function pintarBandeja(zona) {
+    zona.append(el("h2", "titulo-clase", "Preguntas por ubicar"));
+    zona.append(el("p", "fechas", "Son las que marcaste como fuera de tema. Elige a qué clase mandarlas: llegan con sus votos y aparecen en el resumen y en la pantalla para Zoom de esa sesión."));
+    if (!porUbicar.length) { zona.append(el("div", "detalle-vacio", "No hay preguntas por ubicar.")); return; }
+    const destinos = clases.filter((c) => !c.archivada);
+    for (const p of porUbicar) {
+      const fila = el("article", "fila");
+      const c = el("div", "conteo"); c.append(el("span", "numero", p.votos), el("span", "etiqueta", p.votos === 1 ? "voto" : "votos"));
+      const cu = el("div", "cuerpo");
+      const etqs = el("div", "etiquetas"); etqs.append(el("span", "etq origen", "Se hizo en " + tituloDe(p.clase_id))); cu.append(etqs);
+      cu.append(el("p", "texto", p.texto));
+      const q = el("p", "quien"); q.append(el("strong", null, p.nombre), ` · ${fmt.format(new Date(p.creada_en))}`); cu.append(q);
+      if (p.nota_sugerencia) cu.append(el("p", "ayuda", "🔎 " + p.nota_sugerencia));
+      const u = el("div", "ubicar");
+      const sel = el("select"); sel.setAttribute("aria-label", "Clase a la que va");
+      const op0 = el("option", null, "Elige la clase…"); op0.value = ""; sel.append(op0);
+      for (const d of destinos) {
+        if (d.id === p.clase_id) continue;
+        const o = el("option", null, `${d.titulo} (${nombreFase[fase(d)].toLowerCase()})`); o.value = d.id;
+        if (d.id === p.sugerencia_clase_id) { o.selected = true; o.textContent += " · sugerida"; }
+        sel.append(o);
+      }
+      const mover = el("button", "boton chico", "Mover ahí"); mover.type = "button";
+      mover.addEventListener("click", () => moverA(p, sel.value));
+      const reg = el("button", "accion", "Regresarla a su clase"); reg.type = "button";
+      reg.addEventListener("click", () => marcarFuera(p, false));
+      u.append(sel, mover, reg); cu.append(u);
+      fila.append(el("span"), c, cu);
+      zona.append(fila);
+    }
+  }
+
+  async function marcarFuera(p, valor) {
+    const cambios = valor ? { fuera_de_tema: true, sugerida_fuera: false } : { fuera_de_tema: false, sugerida_fuera: false };
+    const { error } = await sb.from("preguntas").update(cambios).eq("id", p.id);
+    if (error) return toast("No se guardó el cambio. Revisa tu conexión.");
+    toast(valor ? "Mandada a Preguntas por ubicar" : "Regresó a su clase");
+    await cargarClases();
+  }
+
+  async function descartarSugerencia(p, cual) {
+    const cambios = cual === "fuera"
+      ? { sugerida_fuera: false, sugerencia_clase_id: null, nota_sugerencia: null }
+      : { sugerida_duplicada_de: null };
+    const { error } = await sb.from("preguntas").update(cambios).eq("id", p.id);
+    if (error) return toast("No se guardó el cambio.");
+    toast("Sugerencia descartada");
+    cargarPreguntas();
+  }
+
+  async function moverA(p, destino) {
+    if (!destino) return toast("Primero elige la clase a la que va.");
+    const { error } = await sb.rpc("mover_pregunta", { p_pregunta: p.id, p_clase_destino: destino });
+    if (error) return toast("No se pudo mover: " + error.message);
+    toast(`Movida a ${tituloDe(destino)}`);
+    await cargarClases();
+  }
+
+  async function juntar(principal, otra) {
+    const { error } = await sb.rpc("juntar_preguntas", { p_principal: principal.id, p_otras: [otra.id] });
+    if (error) return toast("No se pudieron juntar: " + error.message);
+    toast("Listo, quedaron juntas y los votos se sumaron");
+    await cargarClases();
+  }
+
+  async function separar(q) {
+    const { error } = await sb.rpc("separar_pregunta", { p_pregunta: q.id });
+    if (error) return toast("No se pudo separar.");
+    toast("Pregunta separada");
+    await cargarClases();
+  }
+
+  let juntando = null;
+  function abrirJuntar(p, vivas) {
+    juntando = p;
+    $("juntar-de").textContent = `"${p.texto}", de ${p.nombre}`;
+    const cont = $("opciones-juntar"); cont.replaceChildren();
+    for (const q of vivas) {
+      if (q.id === p.id) continue;
+      const l = el("label");
+      const r = el("input"); r.type = "radio"; r.name = "principal"; r.value = q.id;
+      const t = el("span"); t.append(el("strong", null, `${q.votos} 👍 `), `"${q.texto}", de ${q.nombre}`);
+      l.append(r, t); cont.append(l);
+    }
+    $("dialogo-juntar").showModal();
+  }
+  $("cancelar-juntar").addEventListener("click", () => $("dialogo-juntar").close());
+  $("form-juntar").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const elegida = document.querySelector('#opciones-juntar input[name="principal"]:checked');
+    if (!elegida) return toast("Elige con cuál pregunta se junta.");
+    $("dialogo-juntar").close();
+    const principal = preguntas.find((x) => x.id === elegida.value);
+    await juntar(principal, juntando);
+  });
 
   async function alternarRespondida(p, valor) {
     const previo = p.respondida;
@@ -474,7 +755,7 @@
     const { error } = await sb.from("preguntas").delete().eq("id", p.id);
     if (error) return toast("No se pudo borrar.");
     toast("Pregunta borrada");
-    cargarPreguntas();
+    cargarClases();
   }
 
   async function archivarClase(c, valor) {
@@ -512,9 +793,10 @@
       if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;   // evita que Excel lo tome como fórmula
       return `"${t.replace(/"/g, '""')}"`;
     };
-    const filas = [["Votos", "Pregunta", "Nombre", "Respondida", "Enviada"].map(q).join(",")];
+    const filas = [["Votos", "Pregunta", "Nombre", "Tema", "Respondida", "Fuera de tema", "Enviada"].map(q).join(",")];
     for (const p of preguntas) {
-      filas.push([p.votos, p.texto, p.nombre, p.respondida ? "Sí" : "No", fmt.format(new Date(p.creada_en))].map(q).join(","));
+      if (p.fusionada_en) continue;
+      filas.push([p.votos, p.texto, p.nombre, p.tema || "", p.respondida ? "Sí" : "No", p.fuera_de_tema ? "Sí" : "No", fmt.format(new Date(p.creada_en))].map(q).join(","));
     }
     const blob = new Blob(["﻿" + filas.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const a = el("a"); a.href = URL.createObjectURL(blob); a.download = `preguntas-${c.slug}.csv`;

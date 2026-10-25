@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sesión en vivo · Preguntas Regenera360</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  /* Pantalla pensada para compartir en Zoom: siempre oscura y con mucho contraste */
+  :root {
+    --fondo: #15291b;
+    --panel: #1d3524;
+    --texto: #f3f6ef;
+    --suave: #b7c7b9;
+    --paja: #e9c05a;
+    --paja-oscura: #2a2110;
+    --pasto: #8cc49a;
+    --linea: #34503c;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--fondo); color: var(--texto);
+    font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+    display: flex; flex-direction: column;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--paja); outline-offset: 3px; }
+  .oculto { display: none !important; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    padding: 1rem clamp(16px, 4vw, 48px) 0;
+  }
+  .clase { font-family: "Bitter", Georgia, serif; font-weight: 700; font-size: clamp(1rem, 1.8vw, 1.35rem); color: var(--pasto); margin: 0; }
+  .avance { color: var(--suave); font-size: clamp(0.95rem, 1.5vw, 1.15rem); margin: 0; }
+  .herramientas { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .chico {
+    background: transparent; border: 1.5px solid var(--linea); border-radius: 999px;
+    padding: 0.35rem 0.9rem; font-size: 0.9rem; color: var(--suave);
+  }
+  .chico:hover { color: var(--texto); border-color: var(--suave); }
+  .chico[aria-pressed="true"] { background: var(--linea); color: var(--texto); }
+
+  .barra-avance { height: 6px; background: var(--linea); margin: 1rem clamp(16px, 4vw, 48px) 0; border-radius: 999px; overflow: hidden; }
+  .barra-avance > div { height: 100%; background: var(--paja); width: 0; transition: width 0.3s ease; }
+
+  main {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    padding: 2rem clamp(16px, 6vw, 96px); max-width: 1400px; width: 100%; margin: 0 auto;
+  }
+  .etiquetas { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+  .etq { font-size: clamp(0.85rem, 1.3vw, 1.05rem); font-weight: 700; border-radius: 999px; padding: 0.2rem 0.85rem; background: var(--linea); color: var(--texto); }
+  .etq.origen { background: var(--paja); color: var(--paja-oscura); }
+  .etq.hecha { background: var(--pasto); color: #10170f; }
+
+  .pregunta {
+    font-family: "Bitter", Georgia, serif; font-weight: 700;
+    font-size: clamp(1.8rem, 4.2vw, 3.6rem); line-height: 1.22;
+    margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 32ch;
+  }
+  .pregunta.larga { font-size: clamp(1.4rem, 3vw, 2.5rem); max-width: 42ch; }
+  .quien { margin: 1.4rem 0 0; font-size: clamp(1.1rem, 2vw, 1.6rem); color: var(--suave); }
+  .quien strong { color: var(--texto); }
+  .votos {
+    display: inline-flex; align-items: baseline; gap: 0.6rem; margin-top: 1.4rem;
+    background: var(--panel); border: 2px solid var(--paja); border-radius: 14px; padding: 0.5rem 1.1rem;
+    font-size: clamp(1rem, 1.8vw, 1.4rem);
+  }
+  .votos .n { font-family: "Bitter", Georgia, serif; font-weight: 800; font-size: 1.8em; color: var(--paja); line-height: 1; }
+
+  footer {
+    display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;
+    padding: 0 clamp(16px, 4vw, 48px) 1.5rem;
+  }
+  .boton {
+    border: 2px solid var(--linea); background: var(--panel); border-radius: 14px;
+    padding: 0.9rem 1.4rem; font-weight: 700; font-size: clamp(1rem, 1.6vw, 1.2rem); min-height: 56px;
+  }
+  .boton:hover { border-color: var(--suave); }
+  .boton.principal { background: var(--paja); border-color: var(--paja); color: var(--paja-oscura); padding-inline: 2rem; }
+  .boton.principal:hover { filter: brightness(1.06); }
+  .boton:disabled { opacity: 0.4; cursor: default; }
+  .teclas { text-align: center; color: var(--suave); font-size: 0.85rem; margin: 0 0 1rem; }
+  kbd { border: 1px solid var(--linea); border-radius: 4px; padding: 0 0.35rem; font-family: inherit; }
+
+  .centro { text-align: center; }
+  .centro h1 { font-family: "Bitter", Georgia, serif; font-size: clamp(2rem, 5vw, 3.6rem); margin: 0 0 1rem; }
+  .centro p { font-size: clamp(1.1rem, 2vw, 1.5rem); color: var(--suave); margin: 0 auto 1.5rem; max-width: 40ch; }
+  .centro a { color: var(--paja); }
+
+  .aviso {
+    position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+    background: var(--texto); color: var(--fondo); border-radius: 12px; padding: 0.7rem 1rem;
+    display: flex; gap: 1rem; align-items: center; font-weight: 700; z-index: 5; max-width: calc(100vw - 32px);
+  }
+  .aviso button { background: none; border: none; color: #2f5d3a; text-decoration: underline; font-weight: 700; padding: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    main.entra .pregunta { animation: entra 0.35s ease-out; }
+    @keyframes entra { from { opacity: 0; transform: translateY(8px); } }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="clase" id="clase">Cargando…</p>
+      <p class="avance" id="avance"></p>
+    </div>
+    <div class="herramientas oculto" id="herramientas">
+      <button type="button" class="chico" id="orden-votos" aria-pressed="true">Por votos</button>
+      <button type="button" class="chico oculto" id="orden-tema" aria-pressed="false">Por tema</button>
+      <button type="button" class="chico" id="actualizar">Actualizar</button>
+      <button type="button" class="chico" id="pantalla">Pantalla completa</button>
+    </div>
+  </header>
+  <div class="barra-avance oculto" id="barra"><div id="barra-llena"></div></div>
+
+  <main id="zona"></main>
+
+  <div id="controles" class="oculto">
+    <footer>
+      <button type="button" class="boton" id="anterior">← Anterior</button>
+      <button type="button" class="boton" id="saltar">Saltar →</button>
+      <button type="button" class="boton principal" id="respondida">✓ Respondida, siguiente</button>
+    </footer>
+    <p class="teclas">Teclas: <kbd>Enter</kbd> respondida y siguiente · <kbd>→</kbd> saltar · <kbd>←</kbd> anterior</p>
+  </div>
+
+  <div class="aviso oculto" id="aviso" role="status"><span id="aviso-texto"></span><button type="button" id="deshacer">Deshacer</button></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const slug = (new URLSearchParams(location.search).get("c") || "").trim().toLowerCase();
+  const sb = supabase.createClient(PR360.url, PR360.clave);
+
+  let clase = null;
+  let lista = [];        // preguntas de la sesión, en orden; cada una con su estado "respondida"
+  let juntadas = {};     // id principal -> cuántas se juntaron en ella
+  let i = 0;
+  let orden = "votos";
+  let ultimoCambio = null;
+
+  function mensaje(titulo, texto, enlace) {
+    $("controles").classList.add("oculto");
+    $("barra").classList.add("oculto");
+    const z = $("zona"); z.replaceChildren();
+    const c = el("div", "centro");
+    c.append(el("h1", null, titulo));
+    if (texto) c.append(el("p", null, texto));
+    if (enlace) { const p = el("p"); const a = el("a", null, enlace.texto); a.href = enlace.href; p.append(a); c.append(p); }
+    z.append(c);
+  }
+
+  async function iniciar() {
+    if (!slug) return mensaje("Falta la clase", "Abre esta pantalla desde tu página de administración, con el botón de la clase.", { texto: "Ir a la administración", href: "admin.html" });
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session || (session.user.email || "").toLowerCase() !== PR360.correoAdmin.toLowerCase()) {
+      return mensaje("Primero entra como administrador", "Esta pantalla marca preguntas como respondidas, así que solo funciona con tu cuenta. Entra a la administración en este mismo navegador y vuelve a abrirla.", { texto: "Ir a la administración", href: "admin.html" });
+    }
+    await cargar();
+  }
+
+  async function cargar(mantenerId) {
+    const { data: c, error: e1 } = await sb.from("clases").select("*").eq("slug", slug).maybeSingle();
+    if (e1) return mensaje("No se pudo cargar", "Revisa tu conexión y toca Actualizar.");
+    if (!c) return mensaje("No encontramos esta clase", "Puede que se haya borrado. Ábrela de nuevo desde la administración.", { texto: "Ir a la administración", href: "admin.html" });
+    clase = c;
+    document.title = `${c.titulo} · Sesión en vivo`;
+    $("clase").textContent = c.titulo;
+    $("herramientas").classList.remove("oculto");
+
+    const { data: ps, error: e2 } = await sb.from("preguntas")
+      .select("id, nombre, texto, votos, respondida, tema, movida_desde, fuera_de_tema, fusionada_en, creada_en")
+      .eq("clase_id", c.id);
+    if (e2) return mensaje("No se pudieron cargar las preguntas", "Revisa tu conexión y toca Actualizar.");
+
+    juntadas = {};
+    for (const p of ps) if (p.fusionada_en) juntadas[p.fusionada_en] = (juntadas[p.fusionada_en] || 0) + 1;
+    const origenes = {};
+    const ids = [...new Set(ps.map((p) => p.movida_desde).filter(Boolean))];
+    if (ids.length) {
+      const { data: os } = await sb.from("clases").select("id, titulo").in("id", ids);
+      for (const o of os || []) origenes[o.id] = o.titulo;
+    }
+
+    const yaVistas = new Map(lista.map((p) => [p.id, p]));
+    const vivas = ps.filter((p) => !p.fusionada_en && !p.fuera_de_tema)
+      .map((p) => ({ ...p, origen: origenes[p.movida_desde] || null, alInicio: yaVistas.has(p.id) ? yaVistas.get(p.id).alInicio : p.respondida }));
+    // La sesión trabaja sobre las que estaban pendientes al abrirla, más las nuevas que lleguen
+    lista = vivas.filter((p) => !p.alInicio);
+    const hayTemas = lista.some((p) => p.tema);
+    $("orden-tema").classList.toggle("oculto", !hayTemas);
+    if (!hayTemas) orden = "votos";
+    ordenar();
+
+    if (!lista.length) {
+      const total = vivas.length;
+      return mensaje(total ? "Todas están respondidas" : "Esta clase no tiene preguntas",
+        total ? `Las ${total} preguntas de esta clase ya estaban marcadas como respondidas.` : "Cuando los alumnos manden preguntas, aparecen aquí.");
+    }
+    const pos = mantenerId ? lista.findIndex((p) => p.id === mantenerId) : -1;
+    i = pos >= 0 ? pos : siguientePendiente(0);
+    pintar();
+  }
+
+  function ordenar() {
+    lista.sort(orden === "tema"
+      ? (a, b) => (a.tema || "zzz").localeCompare(b.tema || "zzz", "es") || b.votos - a.votos || new Date(a.creada_en) - new Date(b.creada_en)
+      : (a, b) => b.votos - a.votos || new Date(a.creada_en) - new Date(b.creada_en));
+    $("orden-votos").setAttribute("aria-pressed", orden === "votos" ? "true" : "false");
+    $("orden-tema").setAttribute("aria-pressed", orden === "tema" ? "true" : "false");
+  }
+
+  function siguientePendiente(desde) {
+    for (let k = desde; k < lista.length; k++) if (!lista[k].respondida) return k;
+    return -1;
+  }
+
+  function pintar() {
+    if (i < 0) return pintarFinal();
+    const p = lista[i];
+    const hechas = lista.filter((x) => x.respondida).length;
+    $("avance").textContent = `Pregunta ${i + 1} de ${lista.length} · ${hechas} respondidas · faltan ${lista.length - hechas}`;
+    $("barra").classList.remove("oculto");
+    $("barra-llena").style.width = `${Math.round((hechas / lista.length) * 100)}%`;
+    $("controles").classList.remove("oculto");
+
+    const z = $("zona"); z.replaceChildren();
+    z.classList.remove("entra"); void z.offsetWidth; z.classList.add("entra");
+
+    const etqs = el("div", "etiquetas");
+    if (p.respondida) etqs.append(el("span", "etq hecha", "✓ Respondida"));
+    if (p.tema) etqs.append(el("span", "etq", p.tema));
+    if (p.origen) etqs.append(el("span", "etq origen", "Llegó desde " + p.origen));
+    if (etqs.childElementCount) z.append(etqs);
+
+    z.append(el("p", "pregunta" + (p.texto.length > 220 ? " larga" : ""), p.texto));
+    const q = el("p", "quien"); q.append("Pregunta de ", el("strong", null, p.nombre)); z.append(q);
+
+    const v = el("div", "votos");
+    const otros = Math.max(0, p.votos);
+    v.append(el("span", "n", otros));
+    v.append(otros === 1 ? "persona más tiene esta duda" : "personas más tienen esta duda");
+    z.append(v);
+    if (juntadas[p.id]) z.append(el("p", "quien", juntadas[p.id] === 1 ? "Incluye 1 pregunta igual que se juntó aquí." : `Incluye ${juntadas[p.id]} preguntas iguales que se juntaron aquí.`));
+
+    $("anterior").disabled = i === 0;
+    $("saltar").disabled = i >= lista.length - 1 && siguientePendiente(0) === -1;
+    $("respondida").textContent = p.respondida ? "Desmarcar respondida" : "✓ Respondida, siguiente";
+  }
+
+  function pintarFinal() {
+    const pendientes = lista.filter((x) => !x.respondida);
+    $("avance").textContent = `${lista.length - pendientes.length} de ${lista.length} respondidas`;
+    $("barra-llena").style.width = `${Math.round(((lista.length - pendientes.length) / lista.length) * 100)}%`;
+    $("controles").classList.add("oculto");
+    const z = $("zona"); z.replaceChildren();
+    const c = el("div", "centro");
+    if (!pendientes.length) {
+      c.append(el("h1", null, "¡Listo, ya no quedan preguntas!"));
+      c.append(el("p", null, `Respondiste las ${lista.length} preguntas de esta sesión.`));
+    } else {
+      c.append(el("h1", null, pendientes.length === 1 ? "Te saltaste 1 pregunta" : `Te saltaste ${pendientes.length} preguntas`));
+      c.append(el("p", null, "Puedes volver a ellas ahora o dejarlas pendientes para después."));
+      const b = el("button", "boton principal", "Volver a las que salté"); b.type = "button";
+      b.addEventListener("click", () => { i = siguientePendiente(0); pintar(); });
+      c.append(b);
+    }
+    z.append(c);
+  }
+
+  async function guardarRespondida(p, valor) {
+    p.respondida = valor;
+    const { error } = await sb.from("preguntas").update({ respondida: valor }).eq("id", p.id);
+    if (error) { p.respondida = !valor; avisar("No se guardó. Revisa tu conexión.", false); pintar(); return false; }
+    return true;
+  }
+
+  function avisar(texto, conDeshacer) {
+    $("aviso-texto").textContent = texto;
+    $("deshacer").classList.toggle("oculto", !conDeshacer);
+    $("aviso").classList.remove("oculto");
+    clearTimeout(avisar.t); avisar.t = setTimeout(() => $("aviso").classList.add("oculto"), 5000);
+  }
+
+  async function respondidaYSiguiente() {
+    if (i < 0) return;
+    const p = lista[i];
+    if (p.respondida) { await guardarRespondida(p, false); pintar(); return; }
+    if (!(await guardarRespondida(p, true))) return;
+    ultimoCambio = { id: p.id, pos: i };
+    avisar("Marcada como respondida.", true);
+    const sig = siguientePendiente(i + 1);
+    i = sig >= 0 ? sig : siguientePendiente(0);
+    pintar();
+  }
+
+  function saltar() {
+    if (i < 0) return;
+    let sig = siguientePendiente(i + 1);
+    if (sig < 0) sig = -1;
+    i = sig;
+    pintar();
+  }
+
+  function anterior() { if (i > 0) { i--; pintar(); } else if (i < 0 && lista.length) { i = lista.length - 1; pintar(); } }
+
+  $("respondida").addEventListener("click", respondidaYSiguiente);
+  $("saltar").addEventListener("click", saltar);
+  $("anterior").addEventListener("click", anterior);
+  $("deshacer").addEventListener("click", async () => {
+    if (!ultimoCambio) return;
+    const p = lista.find((x) => x.id === ultimoCambio.id);
+    if (p && (await guardarRespondida(p, false))) { i = lista.indexOf(p); ultimoCambio = null; $("aviso").classList.add("oculto"); pintar(); }
+  });
+  $("orden-votos").addEventListener("click", () => { const id = lista[i] && lista[i].id; orden = "votos"; ordenar(); i = Math.max(0, lista.findIndex((p) => p.id === id)); pintar(); });
+  $("orden-tema").addEventListener("click", () => { const id = lista[i] && lista[i].id; orden = "tema"; ordenar(); i = Math.max(0, lista.findIndex((p) => p.id === id)); pintar(); });
+  $("actualizar").addEventListener("click", () => cargar(lista[i] && lista[i].id));
+  $("pantalla").addEventListener("click", () => {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {});
+  });
+  document.addEventListener("fullscreenchange", () => { $("pantalla").textContent = document.fullscreenElement ? "Salir de pantalla completa" : "Pantalla completa"; });
+
+  document.addEventListener("keydown", (ev) => {
+    if (ev.target.closest && ev.target.closest("button") && (ev.key === "Enter" || ev.key === " ")) return;
+    if ($("controles").classList.contains("oculto")) return;
+    if (ev.key === "Enter") { ev.preventDefault(); respondidaYSiguiente(); }
+    else if (ev.key === "ArrowRight") { ev.preventDefault(); saltar(); }
+    else if (ev.key === "ArrowLeft") { ev.preventDefault(); anterior(); }
+  });
+
+  iniciar();
+})();
+</script>
+</body>
+</html>

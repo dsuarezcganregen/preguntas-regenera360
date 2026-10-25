@@ -372,6 +372,11 @@
       const nom = document.createElement("strong"); nom.textContent = p.nombre;
       q.append(nom, `, ${haceCuanto(p.creada_en)}`);
       cuerpo.append(t, q);
+      if (p.viene_de) {
+        const v = document.createElement("p"); v.className = "quien";
+        v.textContent = `Esta pregunta se hizo en "${p.viene_de}" y la pasamos aquí porque es de este tema.`;
+        cuerpo.append(v);
+      }
       if (p.mia && abierta) {
         const acc = document.createElement("div"); acc.className = "acciones-mias";
         const borrar = document.createElement("button"); borrar.type = "button"; borrar.className = "enlace-borrar";
