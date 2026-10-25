@@ -109,7 +109,7 @@
     <div id="como" class="como oculto">
       <h2>¿Cómo le hago?</h2>
       <ol>
-        <li>Lee las preguntas de tus compañeros. Si alguna es igual a tu duda, toca <strong>👍 Yo también</strong>.</li>
+        <li>Lee las preguntas de tus compañeros. Si alguna es igual a tu duda, toca <strong>👍 Yo también</strong>. Si te equivocaste, tócalo otra vez y se quita.</li>
         <li>Si tu duda no está, baja hasta el final de la página. Ahí escribes tu nombre y tu pregunta, y tocas <strong>Enviar mi pregunta</strong>.</li>
       </ol>
     </div>
@@ -119,7 +119,6 @@
       <div class="cabeza-lista">
         <h2 id="titulo-lista">Preguntas de tus compañeros</h2>
         <p id="resumen-lista" class="oculto"></p>
-        <p id="ayuda-voto">¿Alguien ya preguntó lo mismo que tú? Toca <strong>👍 Yo también</strong> en esa pregunta. Si te equivocaste, tócalo otra vez para quitar tu voto.</p>
       </div>
       <div class="ordenar">
         <span>Ver primero:</span>
@@ -260,7 +259,6 @@
     $("como").classList.toggle("oculto", f !== "abierta");
     $("formulario").classList.toggle("oculto", f !== "abierta");
     $("lista-zona").classList.toggle("oculto", f === "antes");
-    $("ayuda-voto").classList.toggle("oculto", f !== "abierta");
 
     if (f === "antes") {
       $("estado").textContent = "";
@@ -321,12 +319,11 @@
     const resumen = $("resumen-lista");
     resumen.classList.toggle("oculto", !(abierta && items.length >= 3));
     if (abierta && items.length >= 3) {
-      resumen.replaceChildren(`Hay ${items.length} preguntas. Léelas y vota por las que compartas. El cuadro para escribir la tuya está hasta abajo. `);
+      resumen.replaceChildren(`Hay ${items.length} preguntas. `);
       const a = document.createElement("a"); a.href = "#formulario"; a.textContent = "Bajar a escribir mi pregunta";
       a.addEventListener("click", (ev) => { ev.preventDefault(); $("formulario").scrollIntoView({ behavior: sinMovimiento ? "auto" : "smooth" }); setTimeout(() => $("nombre").value ? $("texto").focus({ preventScroll: true }) : $("nombre").focus({ preventScroll: true }), 400); });
       resumen.append(a, ".");
     }
-    $("ayuda-voto").classList.toggle("oculto", !(abierta && items.length));
     $("como").classList.toggle("oculto", !(abierta && items.length));
 
     if (!items.length) {
