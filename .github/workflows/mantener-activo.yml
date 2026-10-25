@@ -1,0 +1,21 @@
+# Supabase pausa los proyectos gratis después de una semana con poca actividad.
+# Esta tarea hace una consulta pequeña dos veces al día para que nunca se duerma.
+name: Mantener Supabase activo
+
+on:
+  schedule:
+    - cron: "17 13 * * *"   # 7:17 am hora del centro de México
+    - cron: "17 1 * * *"    # 7:17 pm hora del centro de México
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consultar la base
+        run: |
+          curl --fail --silent --show-error \
+            -X POST "https://hpbogmqxigglrkixgyfr.supabase.co/rest/v1/rpc/ping" \
+            -H "apikey: sb_publishable_tfbH95k-GbYsJNmL6KLRvA_hxNKaufk" \
+            -H "Content-Type: application/json" \
+            -d '{}'

@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Preguntas de la clase · Regenera360</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+<style>
+  main { max-width: 640px; margin: 0 auto; padding: 1.5rem 16px 4rem; }
+  .marca { margin: 0 0 1.25rem; font-size: 0.95rem; color: var(--suelo); font-weight: 700; }
+  h1 { font-size: clamp(1.85rem, 6vw, 2.5rem); font-weight: 800; color: var(--pasto-hondo); }
+  .estado { margin: 0.6rem 0 1.5rem; color: var(--tinta-suave); }
+  .estado strong { color: var(--tinta); }
+
+  .formulario {
+    background: var(--hoja);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    padding: 1.1rem 1.1rem 1.2rem;
+    margin-bottom: 2rem;
+  }
+  .formulario h2 { font-size: 1.25rem; margin-bottom: 0.9rem; }
+  .pie-form { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .contador-letras { font-size: 0.85rem; color: var(--tinta-suave); }
+
+  .cabeza-lista { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+  .cabeza-lista h2 { font-size: 1.25rem; }
+  .vacio { text-align: center; padding: 2rem 1rem; color: var(--tinta-suave); border: 2px dashed var(--linea); border-radius: var(--radio); }
+
+  .espera { text-align: center; padding: 2.5rem 1rem; }
+  .espera .cuando { font-family: "Bitter", Georgia, serif; font-size: 1.35rem; font-weight: 700; color: var(--pasto-hondo); margin: 0.5rem 0; }
+  .recien { animation: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    .recien { animation: aparece 0.9s ease-out; }
+    @keyframes aparece { from { background: var(--paja-clara); } }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="marca">Regenera360 · Preguntas de la clase</p>
+
+  <div id="cargando" class="ayuda">Cargando la sesión…</div>
+  <div id="error-general" class="aviso error oculto" role="alert"></div>
+
+  <section id="sesion" class="oculto">
+    <h1 id="titulo"></h1>
+    <p id="estado" class="estado"></p>
+
+    <div id="espera" class="espera oculto">
+      <p>Las preguntas de esta clase abren el</p>
+      <p class="cuando" id="cuando-abre"></p>
+      <p class="ayuda">Guarda este enlace y vuelve ese día. La página se abre sola cuando llegue la hora.</p>
+    </div>
+
+    <form id="formulario" class="formulario oculto" novalidate>
+      <h2>Haz tu pregunta</h2>
+      <div id="aviso-form" class="aviso oculto" role="status"></div>
+      <label class="campo">
+        <span>Tu nombre</span>
+        <input type="text" id="nombre" maxlength="80" autocomplete="name" required>
+      </label>
+      <label class="campo">
+        <span>Tu pregunta</span>
+        <textarea id="texto" maxlength="1000" required></textarea>
+      </label>
+      <div class="pie-form">
+        <span class="contador-letras" id="letras">0 / 1000</span>
+        <button class="boton" type="submit" id="enviar">Enviar pregunta</button>
+      </div>
+    </form>
+
+    <section id="lista-zona" class="oculto" aria-labelledby="titulo-lista">
+      <div class="cabeza-lista">
+        <h2 id="titulo-lista">Preguntas</h2>
+        <div class="orden" role="group" aria-label="Ordenar preguntas">
+          <button type="button" data-orden="votos" aria-pressed="true">Más votadas</button>
+          <button type="button" data-orden="recientes" aria-pressed="false">Recientes</button>
+        </div>
+      </div>
+      <p class="ayuda" id="ayuda-voto" style="margin-top:-0.4rem">Si tienes la misma duda que alguien más, tócale "yo también" en vez de repetirla.</p>
+      <div id="lista"></div>
+    </section>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(() => {
+  const sb = supabase.createClient(PR360.url, PR360.clave, { auth: { persistSession: false } });
+  const $ = (id) => document.getElementById(id);
+  const slug = (new URLSearchParams(location.search).get("c") || "").trim().toLowerCase();
+
+  const leer = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+
+  // Identificador de este navegador, para contar un voto por pregunta
+  let votante = leer("pr360_votante");
+  if (!votante) {
+    votante = (crypto.randomUUID && crypto.randomUUID()) ||
+      "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+    guardar("pr360_votante", votante);
+  }
+
+  let clase = null;
+  let desfase = 0;            // diferencia entre el reloj del servidor y el del teléfono
+  let preguntas = [];
+  let orden = "votos";
+  let ultimaFirma = "";
+  let recienEnviada = null;
+  let temporizador = null;
+
+  const ahora = () => Date.now() + desfase;
+  const fecha = new Intl.DateTimeFormat("es", {
+    weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZoneName: "short",
+  });
+  const fechaCorta = new Intl.DateTimeFormat("es", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
+
+  function haceCuanto(iso) {
+    const s = Math.max(0, (ahora() - new Date(iso).getTime()) / 1000);
+    if (s < 60) return "hace un momento";
+    const m = Math.round(s / 60);
+    if (m < 60) return `hace ${m} min`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `hace ${h} h`;
+    return fechaCorta.format(new Date(iso));
+  }
+
+  function mostrarError(msg) {
+    $("cargando").classList.add("oculto");
+    $("error-general").textContent = msg;
+    $("error-general").classList.remove("oculto");
+  }
+
+  function fase() {
+    const t = ahora();
+    if (t < new Date(clase.abre_en).getTime()) return "antes";
+    if (t >= new Date(clase.cierra_en).getTime()) return "cerrada";
+    return "abierta";
+  }
+
+  async function cargarClase() {
+    if (!slug) return mostrarError("A este enlace le falta la clase. Pide el enlace completo a tu instructor.");
+    const { data, error } = await sb.rpc("obtener_clase", { p_slug: slug });
+    if (error) return mostrarError("No se pudo cargar la sesión. Revisa tu conexión y vuelve a abrir el enlace.");
+    if (!data) return mostrarError("No encontramos esta clase. Revisa que el enlace esté completo.");
+    clase = data;
+    desfase = new Date(data.ahora).getTime() - Date.now();
+    document.title = `${clase.titulo} · Preguntas Regenera360`;
+    $("titulo").textContent = clase.titulo;
+    $("cargando").classList.add("oculto");
+    $("sesion").classList.remove("oculto");
+    pintarFase();
+  }
+
+  function pintarFase() {
+    clearTimeout(temporizador);
+    const f = fase();
+    $("espera").classList.toggle("oculto", f !== "antes");
+    $("formulario").classList.toggle("oculto", f !== "abierta");
+    $("lista-zona").classList.toggle("oculto", f === "antes");
+    $("ayuda-voto").classList.toggle("oculto", f !== "abierta");
+
+    if (f === "antes") {
+      $("estado").textContent = "";
+      $("cuando-abre").textContent = fecha.format(new Date(clase.abre_en));
+      const falta = new Date(clase.abre_en).getTime() - ahora();
+      temporizador = setTimeout(pintarFase, Math.min(Math.max(falta + 500, 1000), 60000));
+      return;
+    }
+    if (f === "abierta") {
+      $("estado").innerHTML = "";
+      $("estado").append("Abierta para preguntas hasta el ");
+      const s = document.createElement("strong");
+      s.textContent = fecha.format(new Date(clase.cierra_en));
+      $("estado").append(s, ".");
+    } else {
+      $("estado").textContent = "Esta clase ya cerró. Puedes ver las preguntas, pero ya no se reciben nuevas ni votos.";
+    }
+    cargarPreguntas();
+  }
+
+  async function cargarPreguntas() {
+    clearTimeout(temporizador);
+    const { data, error } = await sb.rpc("listar_preguntas", { p_slug: slug, p_votante: votante });
+    if (!error) {
+      preguntas = data || [];
+      const firma = JSON.stringify(preguntas) + orden;
+      if (firma !== ultimaFirma) { ultimaFirma = firma; pintarLista(); }
+    }
+    if (fase() === "abierta") {
+      const falta = new Date(clase.cierra_en).getTime() - ahora();
+      temporizador = setTimeout(() => (fase() === "abierta" ? cargarPreguntas() : pintarFase()), Math.min(8000, falta + 500));
+    }
+  }
+
+  function pintarLista() {
+    const abierta = fase() === "abierta";
+    const lista = $("lista");
+    const enfocada = document.activeElement && document.activeElement.dataset.id;
+    const items = [...preguntas].sort(orden === "votos"
+      ? (a, b) => b.votos - a.votos || new Date(a.creada_en) - new Date(b.creada_en)
+      : (a, b) => new Date(b.creada_en) - new Date(a.creada_en));
+
+    $("titulo-lista").textContent = items.length === 1 ? "1 pregunta" : `${items.length} preguntas`;
+    lista.replaceChildren();
+
+    if (!items.length) {
+      const v = document.createElement("p");
+      v.className = "vacio";
+      v.textContent = abierta ? "Todavía no hay preguntas. La tuya puede ser la primera." : "Esta clase no recibió preguntas.";
+      lista.append(v);
+      return;
+    }
+
+    for (const p of items) {
+      const art = document.createElement("article");
+      art.className = "pregunta" + (p.id === recienEnviada ? " recien" : "");
+
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "voto";
+      b.dataset.id = p.id;
+      const n = document.createElement("span"); n.className = "numero"; n.textContent = p.votos;
+      const e = document.createElement("span"); e.className = "etiqueta";
+      if (p.mia) {
+        b.classList.add("fijo"); b.disabled = true;
+        e.textContent = p.votos === 1 ? "voto" : "votos";
+        b.setAttribute("aria-label", `Tu pregunta, ${p.votos} votos`);
+      } else {
+        b.setAttribute("aria-pressed", p.mi_voto ? "true" : "false");
+        e.textContent = "yo también";
+        b.setAttribute("aria-label", `Yo también tengo esta duda. ${p.votos} votos`);
+        if (!abierta) b.disabled = true;
+        else b.addEventListener("click", () => votar(p, b));
+      }
+      b.append(n, e);
+
+      const cuerpo = document.createElement("div"); cuerpo.className = "cuerpo";
+      const t = document.createElement("p"); t.className = "texto"; t.textContent = p.texto;
+      const q = document.createElement("p"); q.className = "quien";
+      const nom = document.createElement("strong"); nom.textContent = p.nombre;
+      q.append(nom, ` · ${haceCuanto(p.creada_en)}${p.mia ? " · tu pregunta" : ""}`);
+      cuerpo.append(t, q);
+
+      art.append(b, cuerpo);
+      lista.append(art);
+    }
+    if (enfocada) { const el = lista.querySelector(`[data-id="${enfocada}"]`); if (el) el.focus(); }
+  }
+
+  async function votar(p, boton) {
+    boton.disabled = true;
+    const { data, error } = await sb.rpc("alternar_voto", { p_pregunta: p.id, p_votante: votante });
+    if (error) {
+      boton.disabled = false;
+      if (/clase_cerrada/.test(error.message)) return pintarFase();
+      return;
+    }
+    p.votos = data.votos; p.mi_voto = data.mi_voto;
+    ultimaFirma = JSON.stringify(preguntas) + orden;
+    pintarLista();
+    const nuevo = $("lista").querySelector(`[data-id="${p.id}"]`);
+    if (nuevo) { nuevo.classList.add("latido"); nuevo.focus(); }
+  }
+
+  // Formulario
+  $("nombre").value = leer("pr360_nombre") || "";
+  $("texto").addEventListener("input", () => { $("letras").textContent = `${$("texto").value.length} / 1000`; });
+
+  function avisoForm(msg, esError) {
+    const a = $("aviso-form");
+    a.textContent = msg;
+    a.classList.toggle("error", !!esError);
+    a.classList.remove("oculto");
+  }
+
+  $("formulario").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const nombre = $("nombre").value.trim();
+    const texto = $("texto").value.trim();
+    if (!nombre) { avisoForm("Escribe tu nombre para que sepamos de quién es la pregunta.", true); return $("nombre").focus(); }
+    if (texto.length < 3) { avisoForm("Escribe tu pregunta antes de enviarla.", true); return $("texto").focus(); }
+
+    $("enviar").disabled = true;
+    $("enviar").textContent = "Enviando…";
+    const { data, error } = await sb.rpc("enviar_pregunta", { p_slug: slug, p_nombre: nombre, p_texto: texto, p_votante: votante });
+    $("enviar").disabled = false;
+    $("enviar").textContent = "Enviar pregunta";
+
+    if (error) {
+      const m = error.message || "";
+      if (/clase_cerrada/.test(m)) { avisoForm("La clase acaba de cerrar y ya no recibe preguntas.", true); return pintarFase(); }
+      if (/clase_no_abierta/.test(m)) { avisoForm("Esta clase todavía no abre.", true); return pintarFase(); }
+      if (/demasiadas_preguntas/.test(m)) return avisoForm("Enviaste varias preguntas muy seguidas. Espera unos minutos y vuelve a intentar.", true);
+      return avisoForm("No se pudo enviar. Revisa tu conexión y vuelve a intentar; tu texto sigue aquí.", true);
+    }
+    guardar("pr360_nombre", nombre);
+    $("texto").value = "";
+    $("letras").textContent = "0 / 1000";
+    recienEnviada = data;
+    setTimeout(() => { recienEnviada = null; }, 3000);
+    avisoForm("Listo, tu pregunta ya está en la lista.");
+    await cargarPreguntas();
+  });
+
+  document.querySelectorAll(".orden button").forEach((b) => b.addEventListener("click", () => {
+    orden = b.dataset.orden;
+    document.querySelectorAll(".orden button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+    ultimaFirma = "";
+    pintarLista();
+  }));
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && clase && fase() === "abierta") cargarPreguntas();
+  });
+
+  cargarClase();
+})();
+</script>
+</body>
+</html>
