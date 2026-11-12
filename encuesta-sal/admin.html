@@ -91,7 +91,7 @@
 
   const fmt = (n, d = 2) => n == null ? "" : new Intl.NumberFormat("es-MX", { maximumFractionDigits: d }).format(n);
   const fecha = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
-  const FRECUENCIA = { diario: "Diario", cada_2_3: "Cada 2 o 3 días", semanal: "Semanal", quincenal: "Cada 15 días", mensual: "Mensual o menos", siempre_lleno: "Siempre disponible", a_veces: "De vez en cuando" };
+  const FRECUENCIA = { diario: "Diario", cada_2_3: "Cada 2 o 3 días", semanal: "Semanal", quincenal: "Cada 15 días", mensual: "Mensual o menos", siempre_lleno: "Relleno cuando se vacía", a_veces: "Sin regularidad" };
   const FORMA = { separadas: "Separadas", mezcladas: "Mezcladas", solo_mineral: "Solo mineral", solo_sal: "Solo sal", ninguna: "Ninguna" };
   const DONDE = { forrajera: "Forrajera", distribuidor: "Distribuidor", cooperativa: "Cooperativa", en_linea: "En línea", salinera: "Salinera", otro: "Otro" };
   const TIPO = { mar: "Marina / blanca", grano: "Marina / blanca", mina: "De mina", no_se: "No sabe" };

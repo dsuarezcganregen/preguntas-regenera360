@@ -106,18 +106,18 @@
           <span class="nota-campo">En costales, cubetas o kilos, como la midas. Mitad y mitad es 1 por 1.</span>
         </div>
       </div>
-      <label class="campo oculto" id="frecuencia-caja"><span>¿Cada cuánto les ofreces la sal?</span>
-        <select id="frecuencia">
-          <option value="">Elige…</option>
-          <option value="diario">Todos los días</option>
-          <option value="cada_2_3">Cada 2 o 3 días</option>
-          <option value="semanal">Una vez por semana</option>
-          <option value="quincenal">Cada 15 días</option>
-          <option value="mensual">Una vez al mes o menos</option>
-          <option value="siempre_lleno">Siempre disponible</option>
-          <option value="a_veces">De vez en cuando, sin día fijo</option>
-        </select>
-      </label>
+      <div class="campo oculto" id="frecuencia-caja">
+        <span style="display:block;font-weight:700;font-size:1.05rem;margin-bottom:0.4rem">¿Cada cuánto les pones sal?</span>
+        <div class="opciones">
+          <label><input type="radio" name="frecuencia" value="diario"> Todos los días</label>
+          <label><input type="radio" name="frecuencia" value="cada_2_3"> Cada 2 o 3 días</label>
+          <label><input type="radio" name="frecuencia" value="semanal"> Una vez por semana</label>
+          <label><input type="radio" name="frecuencia" value="quincenal"> Cada 15 días</label>
+          <label><input type="radio" name="frecuencia" value="mensual"> Una vez al mes o menos</label>
+          <label><input type="radio" name="frecuencia" value="siempre_lleno"> Sin día fijo: relleno el saladero cuando se vacía</label>
+          <label><input type="radio" name="frecuencia" value="a_veces"> De vez en cuando, cuando me acuerdo o tengo sal</label>
+        </div>
+      </div>
     </section>
 
     <section class="bloque" id="b-mineral">
@@ -357,7 +357,8 @@
       nombre: $("nombre").value.trim() || null,
       comentario: $("comentario").value.trim() || null,
     };
-    if (fila.forma_de_dar && fila.forma_de_dar !== "ninguna" && $("frecuencia").value) fila.frecuencia = $("frecuencia").value;
+    const frec = (document.querySelector('input[name="frecuencia"]:checked') || {}).value;
+    if (fila.forma_de_dar && fila.forma_de_dar !== "ninguna" && frec) fila.frecuencia = frec;
 
     if (fila.forma_de_dar === "mezcladas") {
       const a = leerNumero($("mz-sal").value), b = leerNumero($("mz-mineral").value);
