@@ -93,7 +93,7 @@
   const fecha = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
   const FORMA = { separadas: "Separadas", mezcladas: "Mezcladas", solo_mineral: "Solo mineral", solo_sal: "Solo sal", ninguna: "Ninguna" };
   const DONDE = { forrajera: "Forrajera", distribuidor: "Distribuidor", cooperativa: "Cooperativa", en_linea: "En línea", salinera: "Salinera", otro: "Otro" };
-  const TIPO = { mar: "De mar", grano: "De grano", mina: "De mina", no_se: "No sabe" };
+  const TIPO = { mar: "Marina / blanca", grano: "Marina / blanca", mina: "De mina", no_se: "No sabe" };
 
   function toast(msg) {
     const t = $("toast"); t.textContent = msg; t.classList.remove("oculto");

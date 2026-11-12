@@ -84,10 +84,10 @@
       <div class="campo">
         <span style="display:block;font-weight:700;font-size:1.05rem;margin-bottom:0.4rem">¿Cómo das la sal a tu ganado?</span>
         <div class="opciones" id="forma">
-          <label><input type="radio" name="forma" value="separadas"> Sal blanca y mineral, cada una en su saladero</label>
-          <label><input type="radio" name="forma" value="mezcladas"> Sal blanca y mineral mezcladas en el mismo saladero</label>
+          <label><input type="radio" name="forma" value="separadas"> Sal marina / blanca y mineral, cada una en su saladero</label>
+          <label><input type="radio" name="forma" value="mezcladas"> Sal marina / blanca y mineral mezcladas en el mismo saladero</label>
           <label><input type="radio" name="forma" value="solo_mineral"> Solo sal mineral</label>
-          <label><input type="radio" name="forma" value="solo_sal"> Solo sal blanca</label>
+          <label><input type="radio" name="forma" value="solo_sal"> Solo sal marina / blanca</label>
           <label><input type="radio" name="forma" value="ninguna"> No les doy sal</label>
         </div>
       </div>
@@ -139,16 +139,15 @@
     </section>
 
     <section class="bloque" id="b-sal">
-      <h2>Sal marina</h2>
-      <p class="sub">Sal blanca, de mar, de grano o de mina, sin minerales.</p>
-      <label class="saltar"><input type="checkbox" id="sin-sal"> No sé cuánto cuesta la sal marina</label>
+      <h2>Sal marina / blanca</h2>
+      <p class="sub">La sal sola, sin minerales. La sal de grano también es sal marina.</p>
+      <label class="saltar"><input type="checkbox" id="sin-sal"> No sé cuánto cuesta la sal marina / blanca</label>
       <div id="campos-sal">
         <label class="campo"><span>¿Qué sal es?</span>
           <select id="s-tipo">
             <option value="">Elige…</option>
-            <option value="mar">Sal de mar</option>
-            <option value="grano">Sal de grano</option>
-            <option value="mina">Sal de mina</option>
+            <option value="mar">Sal marina / blanca (de mar o de grano)</option>
+            <option value="mina">Sal de mina (de roca)</option>
             <option value="no_se">No sé</option>
           </select>
         </label>
