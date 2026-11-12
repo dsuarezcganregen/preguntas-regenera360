@@ -295,6 +295,19 @@
 
   let ultimo = null;
 
+  // La tecla Enter (o "Ir" en el teclado del celular) pasa al siguiente campo; nunca envía.
+  // Solo el botón "Enviar mis precios" manda la encuesta.
+  $("form").querySelectorAll('input[type="text"], input[type="email"]').forEach((i) => i.setAttribute("enterkeyhint", "next"));
+  $("form").addEventListener("keydown", (ev) => {
+    if (ev.key !== "Enter" || ev.target.tagName !== "INPUT") return;
+    ev.preventDefault();
+    const campos = [...$("form").querySelectorAll("input, select, textarea")]
+      .filter((e) => e.offsetParent !== null && !e.disabled && !(e.type === "radio" && !e.checked && e.name === ev.target.name));
+    const i = campos.indexOf(ev.target);
+    const sig = campos.slice(i + 1).find((e) => !(e.type === "radio" && e.name === ev.target.name));
+    if (sig) sig.focus();
+  });
+
   $("form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     $("aviso").classList.add("oculto");
