@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Cuánto te cuesta la sal? · Jauría Regenerativa</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Encuesta para la Jauría Regenerativa: cuánto cuesta la sal mineral y la sal marina en tu país.">
+<meta property="og:title" content="¿Cuánto te cuesta la sal?">
+<meta property="og:description" content="Dos minutos: cuánto pagas por la sal mineral y por la sal marina en tu país.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧂</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../estilos.css">
+<style>
+  body { font-size: 1.125rem; }
+  main { max-width: 640px; margin: 0 auto; padding: 1.5rem 16px 5rem; }
+  .marca { margin: 0 0 1rem; font-size: 0.95rem; color: var(--suelo); font-weight: 700; }
+  h1 { font-size: clamp(1.85rem, 6vw, 2.5rem); font-weight: 800; color: var(--pasto-hondo); }
+  .intro { margin: 0.7rem 0 1.4rem; color: var(--tinta-suave); }
+  .bloque {
+    background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra);
+    padding: 1.1rem 1.1rem 0.4rem; margin-bottom: 1.1rem;
+  }
+  .bloque h2 { font-size: 1.3rem; margin-bottom: 0.25rem; }
+  .bloque .sub { margin: 0 0 1rem; color: var(--tinta-suave); font-size: 1rem; }
+  label.campo > span { font-size: 1.05rem; }
+  .opcional { font-weight: 400; color: var(--tinta-suave); font-size: 0.92rem; }
+  label.campo > span.nota-campo { display: block; font-size: 0.92rem; font-weight: 400; color: var(--tinta-suave); margin: 0.3rem 0 0; }
+  .entendimos { display: block; font-size: 0.95rem; color: var(--pasto); font-weight: 700; margin-top: 0.3rem; min-height: 1.4em; }
+  select, input[type="number"] {
+    width: 100%; padding: 0.75rem 0.85rem; border: 1.5px solid var(--linea); border-radius: 10px;
+    background: var(--hoja); font-size: 1.0625rem; min-height: 48px;
+  }
+  select:focus { border-color: var(--pasto); outline: none; box-shadow: 0 0 0 3px var(--pasto-claro); }
+  .opciones { display: grid; gap: 0.5rem; margin-bottom: 1rem; }
+  .opciones label {
+    display: flex; gap: 0.7rem; align-items: center; padding: 0.75rem 0.85rem; min-height: 48px;
+    border: 1.5px solid var(--linea); border-radius: 10px; background: var(--hoja); cursor: pointer;
+  }
+  .opciones label:has(input:checked) { border-color: var(--pasto); background: var(--pasto-claro); font-weight: 700; }
+  .opciones input { width: 1.25rem; height: 1.25rem; accent-color: var(--pasto); flex: none; }
+  .saltar { display: flex; gap: 0.6rem; align-items: center; margin: 0 0 1rem; font-size: 1rem; color: var(--tinta-suave); cursor: pointer; }
+  .saltar input { width: 1.2rem; height: 1.2rem; accent-color: var(--pasto); }
+  .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+  @media (max-width: 420px) { .dos { grid-template-columns: 1fr; } }
+  .boton.grande { width: 100%; font-size: 1.15rem; min-height: 56px; margin: 0.3rem 0 0; }
+  .gracias { text-align: center; background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); padding: 2rem 1.2rem; }
+  .gracias h2 { font-size: 1.6rem; color: var(--pasto-hondo); margin-bottom: 0.6rem; }
+  .cifra { font-family: "Bitter", Georgia, serif; font-weight: 800; font-size: 3.2rem; color: var(--pasto); line-height: 1; margin: 1rem 0 0.4rem; }
+  .detalle { color: var(--tinta-suave); margin: 0.3rem 0; }
+  .pie { margin-top: 2rem; text-align: center; font-size: 0.9rem; color: var(--tinta-suave); }
+</style>
+</head>
+<body>
+<main>
+  <p class="marca">Jauría Regenerativa · Ganadería Regenerativa</p>
+  <h1>¿Cuánto te cuesta la sal?</h1>
+  <p class="intro">Queremos saber cuánto pagan por la sal mineral y por la sal marina en cada país. Son dos minutos. Si no tienes un dato exacto, pon el último precio que pagaste.</p>
+
+  <form id="form" novalidate>
+    <section class="bloque">
+      <h2>Tu rancho</h2>
+      <label class="campo"><span>País</span>
+        <select id="pais" required></select>
+      </label>
+      <label class="campo"><span>Estado, provincia o región <span class="opcional">(opcional)</span></span>
+        <input type="text" id="region" maxlength="120" autocomplete="address-level1" placeholder="Por ejemplo: Chiapas">
+      </label>
+      <label class="campo"><span>¿En qué moneda pagas?</span>
+        <input type="text" id="moneda" maxlength="60" required>
+        <span class="nota-campo">Se llena sola con la de tu país. Cámbiala si pagas en otra, por ejemplo en dólares.</span>
+      </label>
+      <div class="campo">
+        <span style="display:block;font-weight:700;font-size:1.05rem;margin-bottom:0.4rem">¿Cómo das la sal a tu ganado?</span>
+        <div class="opciones" id="forma">
+          <label><input type="radio" name="forma" value="separadas"> Sal blanca y mineral, cada una en su saladero</label>
+          <label><input type="radio" name="forma" value="mezcladas"> Sal blanca y mineral mezcladas en el mismo saladero</label>
+          <label><input type="radio" name="forma" value="solo_mineral"> Solo sal mineral</label>
+          <label><input type="radio" name="forma" value="solo_sal"> Solo sal blanca</label>
+          <label><input type="radio" name="forma" value="ninguna"> No les doy sal</label>
+        </div>
+      </div>
+    </section>
+
+    <section class="bloque" id="b-mineral">
+      <h2>Sal mineral</h2>
+      <p class="sub">La que usas o la que tienes a la mano en tu zona.</p>
+      <label class="saltar"><input type="checkbox" id="sin-mineral"> No sé cuánto cuesta la mineral</label>
+      <div id="campos-mineral">
+        <label class="campo"><span>Marca o nombre</span>
+          <input type="text" id="m-marca" maxlength="120" placeholder="Por ejemplo: Microfos 12">
+        </label>
+        <label class="campo"><span>% de fósforo <span class="opcional">(opcional)</span></span>
+          <input type="text" id="m-fosforo" inputmode="decimal" maxlength="6" placeholder="Por ejemplo: 8">
+          <span class="nota-campo">Viene en la etiqueta del costal. Si no lo sabes, déjalo vacío.</span>
+        </label>
+        <div class="dos">
+          <label class="campo"><span>Tamaño del costal</span>
+            <select id="m-tam">
+              <option value="">Elige…</option>
+              <option value="20">20 kg</option>
+              <option value="25">25 kg</option>
+              <option value="40">40 kg</option>
+              <option value="50">50 kg</option>
+              <option value="45.36">100 libras (quintal)</option>
+              <option value="otro">Otro tamaño</option>
+            </select>
+          </label>
+          <label class="campo oculto" id="m-otro-caja"><span>¿De cuántos kilos?</span>
+            <input type="text" id="m-otro" inputmode="decimal" maxlength="8" placeholder="kg">
+          </label>
+        </div>
+        <label class="campo"><span>Precio del costal</span>
+          <input type="text" id="m-precio" inputmode="decimal" maxlength="15" placeholder="Por ejemplo: 1,350">
+          <span class="entendimos" id="m-precio-ver"></span>
+        </label>
+        <label class="campo"><span>¿Dónde la compras?</span>
+          <select id="m-donde">
+            <option value="">Elige…</option>
+            <option value="forrajera">Forrajera o agroveterinaria</option>
+            <option value="distribuidor">Distribuidor o directo de la fábrica</option>
+            <option value="cooperativa">Cooperativa o asociación</option>
+            <option value="en_linea">En línea</option>
+            <option value="otro">Otro lugar</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="bloque" id="b-sal">
+      <h2>Sal marina</h2>
+      <p class="sub">Sal blanca, de mar, de grano o de mina, sin minerales.</p>
+      <label class="saltar"><input type="checkbox" id="sin-sal"> No sé cuánto cuesta la sal marina</label>
+      <div id="campos-sal">
+        <label class="campo"><span>¿Qué sal es?</span>
+          <select id="s-tipo">
+            <option value="">Elige…</option>
+            <option value="mar">Sal de mar</option>
+            <option value="grano">Sal de grano</option>
+            <option value="mina">Sal de mina</option>
+            <option value="no_se">No sé</option>
+          </select>
+        </label>
+        <div class="dos">
+          <label class="campo"><span>¿Cómo la compras?</span>
+            <select id="s-tam">
+              <option value="">Elige…</option>
+              <option value="25">Costal de 25 kg</option>
+              <option value="50">Costal de 50 kg</option>
+              <option value="45.36">Quintal (100 libras)</option>
+              <option value="granel">A granel</option>
+              <option value="otro">Otro tamaño</option>
+            </select>
+          </label>
+          <label class="campo oculto" id="s-otro-caja"><span id="s-otro-txt">¿De cuántos kilos?</span>
+            <input type="text" id="s-otro" inputmode="decimal" maxlength="8" placeholder="kg">
+          </label>
+        </div>
+        <label class="campo"><span id="s-precio-txt">Precio del costal</span>
+          <input type="text" id="s-precio" inputmode="decimal" maxlength="15" placeholder="Por ejemplo: 185">
+          <span class="entendimos" id="s-precio-ver"></span>
+        </label>
+        <label class="campo"><span>¿Dónde la compras?</span>
+          <select id="s-donde">
+            <option value="">Elige…</option>
+            <option value="forrajera">Forrajera o agroveterinaria</option>
+            <option value="distribuidor">Distribuidor</option>
+            <option value="salinera">Directo de la salinera</option>
+            <option value="cooperativa">Cooperativa o asociación</option>
+            <option value="en_linea">En línea</option>
+            <option value="otro">Otro lugar</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="bloque">
+      <label class="campo"><span>Tu nombre <span class="opcional">(opcional)</span></span>
+        <input type="text" id="nombre" maxlength="120" autocomplete="name">
+      </label>
+      <label class="campo"><span>¿Algo más que quieras contarnos? <span class="opcional">(opcional)</span></span>
+        <textarea id="comentario" maxlength="600"></textarea>
+      </label>
+    </section>
+
+    <div id="aviso" class="aviso error oculto" role="alert"></div>
+    <button class="boton grande" id="enviar" type="submit">Enviar mis precios</button>
+  </form>
+
+  <div id="gracias" class="gracias oculto" role="status" tabindex="-1">
+    <h2>¡Gracias!</h2>
+    <p id="g-texto" class="detalle">Ya quedaron tus precios.</p>
+    <div id="g-proporcion" class="oculto">
+      <p class="detalle">El kilo de tu sal mineral te cuesta</p>
+      <p class="cifra" id="g-veces"></p>
+      <p class="detalle">lo que el kilo de tu sal marina.</p>
+    </div>
+    <p class="detalle" id="g-kilos"></p>
+    <p style="margin-top:1.4rem"><button class="boton secundario" id="otra" type="button">Mandar otros precios</button></p>
+  </div>
+
+  <p class="pie">Los datos se usan solo para comparar precios entre países. Nadie más ve tu nombre.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../config.js"></script>
+<script>
+(() => {
+  const sb = supabase.createClient(PR360.url, PR360.clave);
+  const $ = (id) => document.getElementById(id);
+
+  const PAISES = [
+    ["México", "Pesos mexicanos"], ["Colombia", "Pesos colombianos"], ["Guatemala", "Quetzales"],
+    ["Honduras", "Lempiras"], ["El Salvador", "Dólares"], ["Nicaragua", "Córdobas"], ["Costa Rica", "Colones"],
+    ["Panamá", "Dólares"], ["Belice", "Dólares beliceños"], ["Venezuela", "Dólares"], ["Ecuador", "Dólares"],
+    ["Perú", "Soles"], ["Bolivia", "Bolivianos"], ["Paraguay", "Guaraníes"], ["Uruguay", "Pesos uruguayos"],
+    ["Argentina", "Pesos argentinos"], ["Chile", "Pesos chilenos"], ["Brasil", "Reales"],
+    ["República Dominicana", "Pesos dominicanos"], ["Cuba", "Pesos cubanos"], ["Puerto Rico", "Dólares"],
+    ["Estados Unidos", "Dólares"], ["España", "Euros"], ["Portugal", "Euros"], ["Otro país", ""],
+  ];
+  const selPais = $("pais");
+  selPais.append(new Option("Elige tu país…", ""));
+  PAISES.forEach(([p]) => selPais.append(new Option(p, p)));
+  let monedaTocada = false;
+  $("moneda").addEventListener("input", () => { monedaTocada = true; });
+  selPais.addEventListener("change", () => {
+    const m = (PAISES.find(([p]) => p === selPais.value) || [])[1];
+    if (!monedaTocada || !$("moneda").value) { $("moneda").value = m || ""; monedaTocada = false; }
+  });
+
+  // Números: acepta "1,350", "1.350", "1350.50", "1.350,50"
+  function leerNumero(txt) {
+    let s = String(txt || "").replace(/[^\d.,]/g, "");
+    if (!s) return null;
+    const ultC = s.lastIndexOf(","), ultP = s.lastIndexOf(".");
+    if (ultC >= 0 && ultP >= 0) {
+      const dec = ultC > ultP ? "," : ".";
+      const mil = dec === "," ? "." : ",";
+      s = s.split(mil).join("").replace(dec, ".");
+    } else {
+      const sep = ultC >= 0 ? "," : (ultP >= 0 ? "." : null);
+      if (sep) {
+        const partes = s.split(sep);
+        const ult = partes[partes.length - 1];
+        if (partes.length > 2 || (ult.length === 3 && partes[0] !== "0")) s = partes.join("");
+        else s = partes.join(".");
+      }
+    }
+    const n = Number(s);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  const fmtNum = (n) => new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 }).format(n);
+
+  function verPrecio(inp, salida) {
+    const n = leerNumero(inp.value);
+    salida.textContent = n ? "Entendimos: " + fmtNum(n) + (($("moneda").value) ? " " + $("moneda").value.toLowerCase() : "") : "";
+  }
+  [["m-precio", "m-precio-ver"], ["s-precio", "s-precio-ver"]].forEach(([a, b]) => {
+    $(a).addEventListener("input", () => verPrecio($(a), $(b)));
+  });
+
+  $("m-tam").addEventListener("change", () => $("m-otro-caja").classList.toggle("oculto", $("m-tam").value !== "otro"));
+  $("s-tam").addEventListener("change", () => {
+    const v = $("s-tam").value;
+    $("s-otro-caja").classList.toggle("oculto", v !== "otro" && v !== "granel");
+    if (v === "granel") {
+      $("s-otro-txt").textContent = "¿Por cuántos kilos es el precio?";
+      $("s-otro").placeholder = "Por ejemplo: 1000 (una tonelada)";
+      $("s-precio-txt").textContent = "Precio por esa cantidad";
+    } else {
+      $("s-otro-txt").textContent = "¿De cuántos kilos?";
+      $("s-otro").placeholder = "kg";
+      $("s-precio-txt").textContent = "Precio del costal";
+    }
+  });
+
+  const toggleSeccion = (chk, caja) => $(chk).addEventListener("change", () => $(caja).classList.toggle("oculto", $(chk).checked));
+  toggleSeccion("sin-mineral", "campos-mineral");
+  toggleSeccion("sin-sal", "campos-sal");
+
+  function kilosDe(tam, otro) {
+    if (!tam) return null;
+    if (tam === "otro" || tam === "granel") return leerNumero(otro);
+    return Number(tam);
+  }
+
+  function error(msg, foco) {
+    const a = $("aviso"); a.textContent = msg; a.classList.remove("oculto");
+    if (foco) $(foco).focus();
+    return false;
+  }
+
+  let ultimo = null;
+
+  $("form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    $("aviso").classList.add("oculto");
+    const pais = selPais.value;
+    const moneda = $("moneda").value.trim();
+    if (!pais) return error("Elige tu país.", "pais");
+    if (!moneda) return error("Escribe en qué moneda pagas.", "moneda");
+
+    const fila = {
+      pais,
+      region: $("region").value.trim() || null,
+      moneda,
+      forma_de_dar: (document.querySelector('input[name="forma"]:checked') || {}).value || null,
+      nombre: $("nombre").value.trim() || null,
+      comentario: $("comentario").value.trim() || null,
+    };
+
+    if (!$("sin-mineral").checked) {
+      const kg = kilosDe($("m-tam").value, $("m-otro").value);
+      const precio = leerNumero($("m-precio").value);
+      const algo = $("m-marca").value.trim() || $("m-tam").value || $("m-precio").value.trim();
+      if (algo) {
+        if (!kg) return error("Dinos de qué tamaño es el costal de sal mineral.", "m-tam");
+        if (!precio) return error("Escribe el precio del costal de sal mineral.", "m-precio");
+        const p = leerNumero($("m-fosforo").value);
+        if (p != null && p > 30) return error("El % de fósforo se ve muy alto. Revísalo o déjalo vacío.", "m-fosforo");
+        Object.assign(fila, {
+          mineral_marca: $("m-marca").value.trim() || null,
+          mineral_fosforo: p,
+          mineral_kg: kg, mineral_precio: precio,
+          mineral_donde: $("m-donde").value || null,
+        });
+      }
+    }
+    if (!$("sin-sal").checked) {
+      const kg = kilosDe($("s-tam").value, $("s-otro").value);
+      const precio = leerNumero($("s-precio").value);
+      const algo = $("s-tam").value || $("s-precio").value.trim();
+      if (algo) {
+        if (!kg) return error($("s-tam").value === "granel" ? "Dinos por cuántos kilos es el precio de la sal a granel." : "Dinos de qué tamaño es el costal de sal marina.", $("s-tam").value ? "s-otro" : "s-tam");
+        if (!precio) return error("Escribe el precio de la sal marina.", "s-precio");
+        Object.assign(fila, {
+          sal_tipo: $("s-tipo").value || null,
+          sal_kg: kg, sal_precio: precio,
+          sal_donde: $("s-donde").value || null,
+        });
+      }
+    }
+    if (!fila.mineral_precio && !fila.sal_precio) return error("Necesitamos al menos el precio de una de las dos sales.");
+
+    $("enviar").disabled = true; $("enviar").textContent = "Enviando…";
+    const { error: e } = await sb.from("encuesta_sal").insert(fila);
+    $("enviar").disabled = false; $("enviar").textContent = "Enviar mis precios";
+    if (e) return error("No se pudo enviar. Revisa tu conexión e inténtalo otra vez.");
+    ultimo = fila;
+    mostrarGracias(fila);
+  });
+
+  function mostrarGracias(f) {
+    $("form").classList.add("oculto");
+    const g = $("gracias"); g.classList.remove("oculto");
+    const kM = f.mineral_precio ? f.mineral_precio / f.mineral_kg : null;
+    const kS = f.sal_precio ? f.sal_precio / f.sal_kg : null;
+    const mon = f.moneda.toLowerCase();
+    const partes = [];
+    if (kM) partes.push("Mineral: " + fmtNum(kM) + " " + mon + " el kilo.");
+    if (kS) partes.push("Sal marina: " + fmtNum(kS) + " " + mon + " el kilo.");
+    $("g-kilos").textContent = partes.join(" ");
+    if (kM && kS) {
+      $("g-veces").textContent = fmtNum(Math.round((kM / kS) * 10) / 10) + " veces";
+      $("g-proporcion").classList.remove("oculto");
+      $("g-texto").textContent = "Ya quedaron tus precios. Mira esto:";
+    } else {
+      $("g-proporcion").classList.add("oculto");
+      $("g-texto").textContent = "Ya quedaron tus precios.";
+    }
+    g.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  $("otra").addEventListener("click", () => {
+    ["m-marca","m-fosforo","m-otro","m-precio","s-otro","s-precio","comentario"].forEach((id) => { $(id).value = ""; });
+    ["m-tam","m-donde","s-tipo","s-tam","s-donde"].forEach((id) => { $(id).value = ""; });
+    ["m-precio-ver","s-precio-ver"].forEach((id) => { $(id).textContent = ""; });
+    $("m-otro-caja").classList.add("oculto"); $("s-otro-caja").classList.add("oculto");
+    $("gracias").classList.add("oculto"); $("form").classList.remove("oculto");
+    $("m-marca").focus();
+  });
+})();
+</script>
+</body>
+</html>

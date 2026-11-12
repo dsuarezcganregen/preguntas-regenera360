@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Encuesta de sal · Administración</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧂</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../estilos.css">
+<style>
+  main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 16px 4rem; }
+  .barra { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+  h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); color: var(--pasto-hondo); }
+  h2 { font-size: 1.3rem; margin: 1.8rem 0 0.4rem; }
+  .ayuda { margin: 0 0 0.8rem; }
+  .acceso { max-width: 460px; margin: 3rem auto; background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); padding: 1.4rem; }
+  .tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; }
+  .tarjeta { background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); padding: 1rem; }
+  .tarjeta .n { font-family: "Bitter", Georgia, serif; font-weight: 800; font-size: 2rem; color: var(--pasto); line-height: 1.1; }
+  .tarjeta .t { color: var(--tinta-suave); font-size: 0.95rem; }
+  .tabla-caja { overflow-x: auto; background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  td:first-child { white-space: nowrap; }
+  th, td { padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--linea); text-align: left; vertical-align: top; }
+  th { font-size: 0.85rem; color: var(--tinta-suave); white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th.num { text-align: right; }
+  .veces { font-weight: 700; color: var(--pasto-hondo); }
+  .borrar { background: none; border: none; color: var(--alerta); cursor: pointer; text-decoration: underline; font-size: 0.9rem; padding: 0; }
+  .quieto { color: var(--tinta-suave); }
+  .toast {
+    position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+    background: var(--tinta); color: var(--fondo); padding: 0.7rem 1.1rem; border-radius: 10px;
+    font-size: 0.95rem; z-index: 10; max-width: calc(100vw - 32px);
+  }
+</style>
+</head>
+<body>
+<main>
+  <section id="vista-acceso" class="acceso oculto">
+    <h1 style="font-size:1.6rem;margin-bottom:0.8rem">Encuesta de sal</h1>
+    <div id="aviso-acceso" class="aviso oculto"></div>
+    <p class="ayuda">Si ya entraste a la administración de preguntas en este navegador, recarga esta página y entras directo.</p>
+    <form id="form-acceso">
+      <label class="campo"><span>Tu correo</span><input type="email" id="correo" required></label>
+      <button class="boton" id="btn-acceso" type="submit">Mandarme el enlace para entrar</button>
+    </form>
+  </section>
+
+  <section id="vista-app" class="oculto">
+    <div class="barra">
+      <div>
+        <h1>Encuesta de sal</h1>
+        <p class="ayuda" style="margin:0.3rem 0 0">Enlace para la Jauría: <a id="enlace" href="./" target="_blank" rel="noopener"></a></p>
+      </div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <button class="boton secundario chico" id="recargar" type="button">Actualizar</button>
+        <button class="boton secundario chico" id="csv" type="button">Descargar CSV</button>
+        <button class="boton secundario chico" id="salir" type="button">Salir</button>
+      </div>
+    </div>
+
+    <div class="tarjetas" id="tarjetas"></div>
+
+    <h2>Por país</h2>
+    <p class="ayuda">Medianas del precio por kilo, en la moneda que reportaron. «Veces» compara el kilo de mineral contra el de sal marina en las respuestas que traen los dos precios.</p>
+    <div class="tabla-caja"><table id="t-paises"></table></div>
+
+    <h2>Todas las respuestas</h2>
+    <div class="tabla-caja"><table id="t-resp"></table></div>
+  </section>
+</main>
+
+<div id="toast" class="toast oculto" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="../config.js"></script>
+<script>
+(() => {
+  const sb = supabase.createClient(PR360.url, PR360.clave);
+  const $ = (id) => document.getElementById(id);
+  let filas = [];
+
+  const fmt = (n, d = 2) => n == null ? "" : new Intl.NumberFormat("es-MX", { maximumFractionDigits: d }).format(n);
+  const fecha = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+  const FORMA = { separadas: "Separadas", mezcladas: "Mezcladas", solo_mineral: "Solo mineral", solo_sal: "Solo sal", ninguna: "Ninguna" };
+  const DONDE = { forrajera: "Forrajera", distribuidor: "Distribuidor", cooperativa: "Cooperativa", en_linea: "En línea", salinera: "Salinera", otro: "Otro" };
+  const TIPO = { mar: "De mar", grano: "De grano", mina: "De mina", no_se: "No sabe" };
+
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.classList.remove("oculto");
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add("oculto"), 2600);
+  }
+  const mediana = (xs) => {
+    const v = xs.filter((x) => x != null && isFinite(x)).sort((a, b) => a - b);
+    if (!v.length) return null;
+    const m = Math.floor(v.length / 2);
+    return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+  };
+  const kM = (f) => f.mineral_precio && f.mineral_kg ? f.mineral_precio / f.mineral_kg : null;
+  const kS = (f) => f.sal_precio && f.sal_kg ? f.sal_precio / f.sal_kg : null;
+  const veces = (f) => kM(f) && kS(f) ? kM(f) / kS(f) : null;
+
+  // ---------- Acceso (mismo inicio de sesión que la administración de preguntas) ----------
+  function mostrarAcceso(msg, esError) {
+    $("vista-app").classList.add("oculto");
+    $("vista-acceso").classList.remove("oculto");
+    $("correo").value = $("correo").value || PR360.correoAdmin;
+    if (msg) { const a = $("aviso-acceso"); a.textContent = msg; a.classList.toggle("error", !!esError); a.classList.remove("oculto"); }
+  }
+  $("form-acceso").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const correo = $("correo").value.trim();
+    $("btn-acceso").disabled = true;
+    const { error } = await sb.auth.signInWithOtp({ email: correo, options: { emailRedirectTo: location.href.split("#")[0].split("?")[0] } });
+    $("btn-acceso").disabled = false;
+    if (error) return mostrarAcceso(/rate|seconds|security/i.test(error.message) ? "Ya se mandó un enlace hace poco. Espera un minuto." : "No se pudo mandar el enlace: " + error.message, true);
+    mostrarAcceso(`Te mandamos un enlace a ${correo}. Ábrelo desde este mismo navegador. Si te lleva a la administración de preguntas, vuelve a esta página y recárgala.`);
+  });
+  async function entrar(session) {
+    const correo = (session.user.email || "").toLowerCase();
+    if (correo !== PR360.correoAdmin.toLowerCase()) {
+      await sb.auth.signOut();
+      return mostrarAcceso(`La cuenta ${correo} no es de administrador.`, true);
+    }
+    $("vista-acceso").classList.add("oculto");
+    $("vista-app").classList.remove("oculto");
+    const url = new URL("./", location.href.split("#")[0].split("?")[0]).href;
+    $("enlace").textContent = url; $("enlace").href = url;
+    await cargar();
+  }
+  $("salir").addEventListener("click", async () => { await sb.auth.signOut(); mostrarAcceso("Saliste."); });
+  let dentro = false;
+  sb.auth.onAuthStateChange((ev, s) => { if (s && !dentro) { dentro = true; setTimeout(() => entrar(s), 0); } if (!s) dentro = false; });
+  sb.auth.getSession().then(({ data }) => { if (!data.session) mostrarAcceso(); });
+
+  // ---------- Datos ----------
+  async function cargar() {
+    const { data, error } = await sb.from("encuesta_sal").select("*").order("creado", { ascending: false });
+    if (error) return toast("No se pudieron cargar las respuestas.");
+    filas = data || [];
+    pintar();
+  }
+  $("recargar").addEventListener("click", cargar);
+
+  function celda(tr, txt, cls) { const td = document.createElement("td"); if (cls) td.className = cls; td.textContent = txt ?? ""; tr.append(td); return td; }
+  function cabeza(tabla, cols) {
+    const tr = document.createElement("tr");
+    cols.forEach(([t, num]) => { const th = document.createElement("th"); th.textContent = t; if (num) th.className = "num"; tr.append(th); });
+    const thead = document.createElement("thead"); thead.append(tr); tabla.append(thead);
+  }
+
+  function pintar() {
+    const conAmbas = filas.filter((f) => veces(f) != null);
+    const paises = new Set(filas.map((f) => f.pais));
+    const separan = filas.filter((f) => f.forma_de_dar === "separadas").length;
+    const conForma = filas.filter((f) => f.forma_de_dar).length;
+    const t = $("tarjetas"); t.innerHTML = "";
+    [[filas.length, "respuestas"], [paises.size, "países"],
+     [conAmbas.length ? fmt(mediana(conAmbas.map(veces)), 1) + "×" : "—", "veces más cara la mineral (mediana)"],
+     [conForma ? Math.round((separan / conForma) * 100) + "%" : "—", "ya separan las sales"]]
+      .forEach(([n, txt]) => { const d = document.createElement("div"); d.className = "tarjeta"; d.innerHTML = '<div class="n"></div><div class="t"></div>'; d.querySelector(".n").textContent = n; d.querySelector(".t").textContent = txt; t.append(d); });
+
+    // Por país (y moneda)
+    const tp = $("t-paises"); tp.innerHTML = "";
+    cabeza(tp, [["País"], ["Moneda"], ["Respuestas", 1], ["Mineral / kg", 1], ["Sal marina / kg", 1], ["Veces", 1], ["Rango de veces", 1]]);
+    const grupos = {};
+    filas.forEach((f) => { const k = f.pais + "|" + f.moneda.toLowerCase(); (grupos[k] = grupos[k] || []).push(f); });
+    const tb = document.createElement("tbody");
+    Object.entries(grupos).sort((a, b) => b[1].length - a[1].length).forEach(([k, fs]) => {
+      const tr = document.createElement("tr");
+      celda(tr, fs[0].pais); celda(tr, fs[0].moneda); celda(tr, fs.length, "num");
+      celda(tr, fmt(mediana(fs.map(kM))), "num"); celda(tr, fmt(mediana(fs.map(kS))), "num");
+      const vs = fs.map(veces).filter((v) => v != null);
+      celda(tr, vs.length ? fmt(mediana(vs), 1) + "×" : "", "num veces");
+      celda(tr, vs.length > 1 ? fmt(Math.min(...vs), 1) + " a " + fmt(Math.max(...vs), 1) : "", "num");
+      tb.append(tr);
+    });
+    if (!filas.length) { const tr = document.createElement("tr"); const td = celda(tr, "Todavía no hay respuestas.", "quieto"); td.colSpan = 7; tb.append(tr); }
+    tp.append(tb);
+
+    // Todas
+    const tr0 = $("t-resp"); tr0.innerHTML = "";
+    cabeza(tr0, [["Fecha"], ["Nombre"], ["País / región"], ["Moneda"], ["Cómo da la sal"], ["Mineral"], ["% P", 1], ["Costal kg", 1], ["Precio", 1], ["Mineral / kg", 1], ["Compra"], ["Sal"], ["Kg", 1], ["Precio", 1], ["Sal / kg", 1], ["Compra"], ["Veces", 1], ["Comentario"], [""]]);
+    const tb2 = document.createElement("tbody");
+    filas.forEach((f) => {
+      const tr = document.createElement("tr");
+      celda(tr, fecha.format(new Date(f.creado)));
+      celda(tr, f.nombre || "");
+      celda(tr, f.pais + (f.region ? " · " + f.region : ""));
+      celda(tr, f.moneda);
+      celda(tr, FORMA[f.forma_de_dar] || "");
+      celda(tr, f.mineral_marca || (f.mineral_precio ? "Sin marca" : ""));
+      celda(tr, fmt(f.mineral_fosforo, 1), "num");
+      celda(tr, fmt(f.mineral_kg), "num");
+      celda(tr, fmt(f.mineral_precio), "num");
+      celda(tr, fmt(kM(f)), "num");
+      celda(tr, DONDE[f.mineral_donde] || "");
+      celda(tr, TIPO[f.sal_tipo] || (f.sal_precio ? "Sal" : ""));
+      celda(tr, fmt(f.sal_kg), "num");
+      celda(tr, fmt(f.sal_precio), "num");
+      celda(tr, fmt(kS(f)), "num");
+      celda(tr, DONDE[f.sal_donde] || "");
+      celda(tr, veces(f) ? fmt(veces(f), 1) + "×" : "", "num veces");
+      celda(tr, f.comentario || "");
+      const td = document.createElement("td");
+      const b = document.createElement("button"); b.className = "borrar"; b.type = "button"; b.textContent = "Borrar";
+      b.addEventListener("click", () => borrar(f, b));
+      td.append(b); tr.append(td);
+      tb2.append(tr);
+    });
+    tr0.append(tb2);
+  }
+
+  async function borrar(f, b) {
+    if (b.dataset.seguro !== "1") { b.dataset.seguro = "1"; b.textContent = "¿Seguro? Toca otra vez"; setTimeout(() => { b.dataset.seguro = ""; b.textContent = "Borrar"; }, 4000); return; }
+    const { error } = await sb.from("encuesta_sal").delete().eq("id", f.id);
+    if (error) return toast("No se pudo borrar.");
+    toast("Respuesta borrada."); cargar();
+  }
+
+  $("csv").addEventListener("click", () => {
+    const cols = ["creado","nombre","pais","region","moneda","forma_de_dar","mineral_marca","mineral_fosforo","mineral_kg","mineral_precio","mineral_donde","sal_tipo","sal_kg","sal_precio","sal_donde","comentario"];
+    const esc = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const extra = ["mineral_por_kg", "sal_por_kg", "veces"];
+    const lineas = [cols.concat(extra).join(",")].concat(filas.map((f) => cols.map((c) => esc(f[c])).concat([kM(f), kS(f), veces(f)].map((x) => x == null ? "" : x.toFixed(2))).join(",")));
+    const blob = new Blob(["﻿" + lineas.join("\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "encuesta-sal.csv"; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

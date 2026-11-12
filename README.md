@@ -6,6 +6,9 @@ Página para que los alumnos de cada clase de Regenera360 dejen sus preguntas y 
 - **Administración:** `https://dsuarezcganregen.github.io/preguntas-regenera360/admin.html`
 - **Pantalla para Zoom:** `https://dsuarezcganregen.github.io/preguntas-regenera360/sesion.html?c=<clase>` (se abre desde la administración)
 
+- **Encuesta de precios de sal (Jauría):** `https://dsuarezcganregen.github.io/preguntas-regenera360/encuesta-sal/`
+- **Respuestas de la encuesta:** `https://dsuarezcganregen.github.io/preguntas-regenera360/encuesta-sal/admin.html`
+
 ## Cómo funciona
 
 - Cada clase tiene su enlace, fecha de apertura y fecha de cierre. Antes de abrir, el enlace muestra cuándo abre; después de cerrar, queda en solo lectura.
@@ -14,6 +17,10 @@ Página para que los alumnos de cada clase de Regenera360 dejen sus preguntas y 
 - Las preguntas fuera de tema van a la bandeja "Preguntas por ubicar" hasta que se elige su clase. Llegan con sus votos y el alumno ve de dónde venían.
 - Cada clase muestra arriba el resumen de su sesión (las clases que cierran a la misma hora son una sola sesión), con orden sugerido por tema y botón para compartirlo por WhatsApp.
 - La pantalla para Zoom muestra una pregunta a la vez, juntando todas las clases de la sesión, de la más votada a la menos votada, sin las fuera de tema ni las repetidas.
+
+## Encuesta de precios de sal
+
+Para el taller Saladero Inteligente. Cada ganadero de la Jauría Regenerativa deja su país, la moneda en que paga, cómo da la sal, el precio y el tamaño del costal de su sal mineral y de su sal marina, y dónde las compra. Al enviar, la página le dice cuántas veces más le cuesta el kilo de mineral que el de sal marina. Las respuestas van a la tabla `encuesta_sal`: cualquiera puede responder, solo daniel@ganaderiaregenerativa.com las ve. En la administración salen las medianas por país y se descargan en CSV.
 
 ## Tareas automáticas
 
