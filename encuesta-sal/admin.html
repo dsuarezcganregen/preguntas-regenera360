@@ -2,30 +2,32 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="theme-color" content="#ffffff">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Encuesta de sal · Administración</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧂</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../estilos.css">
+<link rel="stylesheet" href="tema.css">
 <style>
   main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 16px 4rem; }
-  .barra { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
-  h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); color: var(--pasto-hondo); }
+  .barra { border-bottom: 2px solid var(--pasto); padding-bottom: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+  h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); color: var(--tinta); }
   h2 { font-size: 1.3rem; margin: 1.8rem 0 0.4rem; }
   .ayuda { margin: 0 0 0.8rem; }
-  .acceso { max-width: 460px; margin: 3rem auto; background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); padding: 1.4rem; }
+  .acceso { max-width: 460px; margin: 3rem auto; background: #ffffff; border: 1px solid var(--linea); border-radius: var(--radio); padding: 1.4rem; }
   .tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; }
-  .tarjeta { background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); padding: 1rem; }
-  .tarjeta .n { font-family: "Bitter", Georgia, serif; font-weight: 800; font-size: 2rem; color: var(--pasto); line-height: 1.1; }
+  .tarjeta { background: #ffffff; border: 1px solid var(--linea); border-radius: var(--radio); padding: 1rem; }
+  .tarjeta .n { font-family: "Inter", system-ui, sans-serif; font-weight: 800; font-size: 2rem; color: var(--pasto); line-height: 1.1; }
   .tarjeta .t { color: var(--tinta-suave); font-size: 0.95rem; }
-  .tabla-caja { overflow-x: auto; background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); }
+  .tabla-caja { overflow-x: auto; background: #ffffff; border: 1px solid var(--linea); border-radius: var(--radio); }
   table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
   td:first-child { white-space: nowrap; }
   th, td { padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--linea); text-align: left; vertical-align: top; }
-  th { font-size: 0.85rem; color: var(--tinta-suave); white-space: nowrap; }
+  th { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pasto); border-bottom: 2px solid var(--pasto); white-space: nowrap; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   th.num { text-align: right; }
   .veces { font-weight: 700; color: var(--pasto-hondo); }
@@ -52,9 +54,12 @@
 
   <section id="vista-app" class="oculto">
     <div class="barra">
-      <div>
+      <div style="display:flex;align-items:flex-end;gap:1rem">
+        <img src="logo.png" alt="Ganadería Regenerativa" width="72" style="height:auto">
+        <div>
         <h1>Encuesta de sal</h1>
         <p class="ayuda" style="margin:0.3rem 0 0">Enlace para la Jauría: <a id="enlace" href="./" target="_blank" rel="noopener"></a></p>
+        </div>
       </div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
         <button class="boton secundario chico" id="recargar" type="button">Actualizar</button>

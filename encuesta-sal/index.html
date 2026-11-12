@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="theme-color" content="#ffffff">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>¿Cuánto te cuesta la sal? · Jauría Regenerativa</title>
 <meta name="robots" content="noindex">
@@ -12,18 +13,20 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧂</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bitter:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../estilos.css">
+<link rel="stylesheet" href="tema.css">
 <style>
   body { font-size: 1.125rem; }
   main { max-width: 640px; margin: 0 auto; padding: 1.5rem 16px 5rem; }
   .marca { margin: 0 0 1rem; font-size: 0.95rem; color: var(--suelo); font-weight: 700; }
-  h1 { font-size: clamp(1.85rem, 6vw, 2.5rem); font-weight: 800; color: var(--pasto-hondo); }
+  h1 { font-size: clamp(1.6rem, 6.5vw, 2.3rem); }
   .intro { margin: 0.7rem 0 1.4rem; color: var(--tinta-suave); }
   .bloque {
-    background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra);
+    background: #ffffff; border: 1px solid var(--linea); border-radius: var(--radio);
     padding: 1.1rem 1.1rem 0.4rem; margin-bottom: 1.1rem;
   }
+  .bloque h2 { color: var(--pasto); }
   .bloque h2 { font-size: 1.3rem; margin-bottom: 0.25rem; }
   .bloque .sub { margin: 0 0 1rem; color: var(--tinta-suave); font-size: 1rem; }
   label.campo > span { font-size: 1.05rem; }
@@ -47,17 +50,22 @@
   .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
   @media (max-width: 420px) { .dos { grid-template-columns: 1fr; } }
   .boton.grande { width: 100%; font-size: 1.15rem; min-height: 56px; margin: 0.3rem 0 0; }
-  .gracias { text-align: center; background: var(--hoja); border-radius: var(--radio); box-shadow: var(--sombra); padding: 2rem 1.2rem; }
+  .gracias { text-align: center; background: var(--pasto-claro); border: 1.5px solid var(--pasto); border-radius: var(--radio); padding: 2rem 1.2rem; }
   .gracias h2 { font-size: 1.6rem; color: var(--pasto-hondo); margin-bottom: 0.6rem; }
-  .cifra { font-family: "Bitter", Georgia, serif; font-weight: 800; font-size: 3.2rem; color: var(--pasto); line-height: 1; margin: 1rem 0 0.4rem; }
+  .cifra { font-family: "Inter", system-ui, sans-serif; font-weight: 800; font-size: 3.2rem; color: var(--pasto); line-height: 1; margin: 1rem 0 0.4rem; }
   .detalle { color: var(--tinta-suave); margin: 0.3rem 0; }
   .pie { margin-top: 2rem; text-align: center; font-size: 0.9rem; color: var(--tinta-suave); }
 </style>
 </head>
 <body>
 <main>
-  <p class="marca">Jauría Regenerativa · Ganadería Regenerativa</p>
-  <h1>¿Cuánto te cuesta la sal?</h1>
+  <header class="encabezado">
+    <img src="logo.png" alt="Ganadería Regenerativa" width="360" height="300">
+    <div>
+      <p class="k">Jauría Regenerativa</p>
+      <h1>¿Cuánto te cuesta la sal?</h1>
+    </div>
+  </header>
   <p class="intro">Queremos saber cuánto pagan por la sal mineral y por la sal marina en cada país. Son dos minutos. Si no tienes un dato exacto, pon el último precio que pagaste.</p>
 
   <form id="form" novalidate>

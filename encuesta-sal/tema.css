@@ -1,0 +1,62 @@
+/* Tema de la encuesta de sal: fondo blanco y verde del Saladero Inteligente.
+   Va después de ../estilos.css y fija el modo claro aunque el teléfono esté en modo oscuro. */
+:root,
+:root:not([data-x]) {
+  --pasto: #3e5c3a;
+  --pasto-hondo: #2f4a2c;
+  --pasto-claro: #eef3e9;
+  --suelo: #4f574b;
+  --paja: #9db58f;
+  --paja-clara: #f2f6ee;
+  --fondo: #ffffff;
+  --hoja: #ffffff;
+  --tinta: #1d211b;
+  --tinta-suave: #5b6356;
+  --linea: #d5dccf;
+  --alerta: #9a3a27;
+  --alerta-fondo: #f8e9e4;
+  --radio: 8px;
+  --sombra: none;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pasto: #3e5c3a;
+    --pasto-hondo: #2f4a2c;
+    --pasto-claro: #eef3e9;
+    --suelo: #4f574b;
+    --paja: #9db58f;
+    --paja-clara: #f2f6ee;
+    --fondo: #ffffff;
+    --hoja: #ffffff;
+    --tinta: #1d211b;
+    --tinta-suave: #5b6356;
+    --linea: #d5dccf;
+    --alerta: #9a3a27;
+    --alerta-fondo: #f8e9e4;
+    --sombra: none;
+    color-scheme: light;
+  }
+  .boton { color: #ffffff; }
+}
+
+body { background: #ffffff; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+h1, h2, h3 { font-family: "Inter", system-ui, sans-serif; letter-spacing: -0.02em; }
+
+.boton { border-radius: 8px; }
+.boton.secundario { background: #ffffff; }
+
+input[type="text"], input[type="email"], textarea, select { border-radius: 8px !important; border-width: 1px !important; }
+
+/* Encabezado como el del protocolo: logo, antetítulo verde y raya debajo */
+.encabezado {
+  display: flex; align-items: flex-end; gap: 1rem;
+  padding-bottom: 0.9rem; margin-bottom: 1.1rem;
+  border-bottom: 2px solid var(--pasto);
+}
+.encabezado img { width: 84px; height: auto; flex: none; }
+.encabezado .k {
+  margin: 0 0 0.25rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--pasto);
+}
+.encabezado h1 { margin: 0; color: var(--tinta); font-weight: 800; line-height: 1.05; }
