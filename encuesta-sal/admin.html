@@ -91,6 +91,7 @@
 
   const fmt = (n, d = 2) => n == null ? "" : new Intl.NumberFormat("es-MX", { maximumFractionDigits: d }).format(n);
   const fecha = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+  const FRECUENCIA = { diario: "Diario", cada_2_3: "Cada 2 o 3 días", semanal: "Semanal", quincenal: "Cada 15 días", mensual: "Mensual o menos", siempre_lleno: "Siempre disponible", a_veces: "De vez en cuando" };
   const FORMA = { separadas: "Separadas", mezcladas: "Mezcladas", solo_mineral: "Solo mineral", solo_sal: "Solo sal", ninguna: "Ninguna" };
   const DONDE = { forrajera: "Forrajera", distribuidor: "Distribuidor", cooperativa: "Cooperativa", en_linea: "En línea", salinera: "Salinera", otro: "Otro" };
   const TIPO = { mar: "Marina / blanca", grano: "Marina / blanca", mina: "De mina", no_se: "No sabe" };
@@ -189,7 +190,7 @@
 
     // Todas
     const tr0 = $("t-resp"); tr0.innerHTML = "";
-    cabeza(tr0, [["Fecha"], ["Nombre"], ["País / región"], ["Moneda"], ["Cómo da la sal"], ["Mineral"], ["% P", 1], ["Costal kg", 1], ["Precio", 1], ["Mineral / kg", 1], ["Compra"], ["Sal"], ["Kg", 1], ["Precio", 1], ["Sal / kg", 1], ["Compra"], ["Veces", 1], ["Comentario"], [""]]);
+    cabeza(tr0, [["Fecha"], ["Nombre"], ["País / región"], ["Moneda"], ["Cómo da la sal"], ["Frecuencia"], ["Mineral"], ["% P", 1], ["Costal kg", 1], ["Precio", 1], ["Mineral / kg", 1], ["Compra"], ["Sal"], ["Kg", 1], ["Precio", 1], ["Sal / kg", 1], ["Compra"], ["Veces", 1], ["Comentario"], [""]]);
     const tb2 = document.createElement("tbody");
     filas.forEach((f) => {
       const tr = document.createElement("tr");
@@ -198,6 +199,7 @@
       celda(tr, f.pais + (f.region ? " · " + f.region : ""));
       celda(tr, f.moneda);
       celda(tr, (FORMA[f.forma_de_dar] || "") + (f.mezcla_sal ? " (" + fmt(f.mezcla_sal) + " sal : " + fmt(f.mezcla_mineral) + " mineral)" : ""));
+      celda(tr, FRECUENCIA[f.frecuencia] || "");
       celda(tr, f.mineral_marca || (f.mineral_precio ? "Sin marca" : ""));
       celda(tr, fmt(f.mineral_fosforo, 1), "num");
       celda(tr, fmt(f.mineral_kg), "num");
@@ -228,7 +230,7 @@
   }
 
   $("csv").addEventListener("click", () => {
-    const cols = ["creado","nombre","pais","region","moneda","forma_de_dar","mezcla_sal","mezcla_mineral","mineral_marca","mineral_fosforo","mineral_kg","mineral_precio","mineral_donde","sal_tipo","sal_kg","sal_precio","sal_donde","comentario"];
+    const cols = ["creado","nombre","pais","region","moneda","forma_de_dar","mezcla_sal","mezcla_mineral","frecuencia","mineral_marca","mineral_fosforo","mineral_kg","mineral_precio","mineral_donde","sal_tipo","sal_kg","sal_precio","sal_donde","comentario"];
     const esc = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     const extra = ["mineral_por_kg", "sal_por_kg", "veces"];
     const lineas = [cols.concat(extra).join(",")].concat(filas.map((f) => cols.map((c) => esc(f[c])).concat([kM(f), kS(f), veces(f)].map((x) => x == null ? "" : x.toFixed(2))).join(",")));

@@ -106,6 +106,18 @@
           <span class="nota-campo">En costales, cubetas o kilos, como la midas. Mitad y mitad es 1 por 1.</span>
         </div>
       </div>
+      <label class="campo oculto" id="frecuencia-caja"><span>¿Cada cuánto les ofreces la sal?</span>
+        <select id="frecuencia">
+          <option value="">Elige…</option>
+          <option value="diario">Todos los días</option>
+          <option value="cada_2_3">Cada 2 o 3 días</option>
+          <option value="semanal">Una vez por semana</option>
+          <option value="quincenal">Cada 15 días</option>
+          <option value="mensual">Una vez al mes o menos</option>
+          <option value="siempre_lleno">Siempre disponible</option>
+          <option value="a_veces">De vez en cuando, sin día fijo</option>
+        </select>
+      </label>
     </section>
 
     <section class="bloque" id="b-mineral">
@@ -214,13 +226,7 @@
 
   <div id="gracias" class="gracias oculto" role="status" tabindex="-1">
     <h2>¡Gracias!</h2>
-    <p id="g-texto" class="detalle">Ya quedaron tus precios.</p>
-    <div id="g-proporcion" class="oculto">
-      <p class="detalle">El kilo de tu sal mineral te cuesta</p>
-      <p class="cifra" id="g-veces"></p>
-      <p class="detalle">lo que el kilo de tu sal marina.</p>
-    </div>
-    <p class="detalle" id="g-kilos"></p>
+    <p class="detalle">Ya quedaron tus precios. Nos ayudan mucho.</p>
     <p style="margin-top:1.4rem"><button class="boton secundario" id="otra" type="button">Mandar otros precios</button></p>
   </div>
 
@@ -311,6 +317,7 @@
 
   document.querySelectorAll('input[name="forma"]').forEach((r) => r.addEventListener("change", () => {
     $("mezcla-caja").classList.toggle("oculto", r.value !== "mezcladas" || !r.checked);
+    if (r.checked) $("frecuencia-caja").classList.toggle("oculto", r.value === "ninguna");
   }));
 
   function error(msg, foco) {
@@ -350,6 +357,7 @@
       nombre: $("nombre").value.trim() || null,
       comentario: $("comentario").value.trim() || null,
     };
+    if (fila.forma_de_dar && fila.forma_de_dar !== "ninguna" && $("frecuencia").value) fila.frecuencia = $("frecuencia").value;
 
     if (fila.forma_de_dar === "mezcladas") {
       const a = leerNumero($("mz-sal").value), b = leerNumero($("mz-mineral").value);
@@ -404,21 +412,6 @@
   function mostrarGracias(f) {
     $("form").classList.add("oculto");
     const g = $("gracias"); g.classList.remove("oculto");
-    const kM = f.mineral_precio ? f.mineral_precio / f.mineral_kg : null;
-    const kS = f.sal_precio ? f.sal_precio / f.sal_kg : null;
-    const mon = f.moneda.toLowerCase();
-    const partes = [];
-    if (kM) partes.push("Mineral: " + fmtNum(kM) + " " + mon + " el kilo.");
-    if (kS) partes.push("Sal marina: " + fmtNum(kS) + " " + mon + " el kilo.");
-    $("g-kilos").textContent = partes.join(" ");
-    if (kM && kS) {
-      $("g-veces").textContent = fmtNum(Math.round((kM / kS) * 10) / 10) + " veces";
-      $("g-proporcion").classList.remove("oculto");
-      $("g-texto").textContent = "Ya quedaron tus precios. Mira esto:";
-    } else {
-      $("g-proporcion").classList.add("oculto");
-      $("g-texto").textContent = "Ya quedaron tus precios.";
-    }
     g.focus();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
