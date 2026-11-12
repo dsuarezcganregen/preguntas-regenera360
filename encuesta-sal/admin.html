@@ -197,7 +197,7 @@
       celda(tr, f.nombre || "");
       celda(tr, f.pais + (f.region ? " · " + f.region : ""));
       celda(tr, f.moneda);
-      celda(tr, FORMA[f.forma_de_dar] || "");
+      celda(tr, (FORMA[f.forma_de_dar] || "") + (f.mezcla_sal ? " (" + fmt(f.mezcla_sal) + " sal : " + fmt(f.mezcla_mineral) + " mineral)" : ""));
       celda(tr, f.mineral_marca || (f.mineral_precio ? "Sin marca" : ""));
       celda(tr, fmt(f.mineral_fosforo, 1), "num");
       celda(tr, fmt(f.mineral_kg), "num");
@@ -228,7 +228,7 @@
   }
 
   $("csv").addEventListener("click", () => {
-    const cols = ["creado","nombre","pais","region","moneda","forma_de_dar","mineral_marca","mineral_fosforo","mineral_kg","mineral_precio","mineral_donde","sal_tipo","sal_kg","sal_precio","sal_donde","comentario"];
+    const cols = ["creado","nombre","pais","region","moneda","forma_de_dar","mezcla_sal","mezcla_mineral","mineral_marca","mineral_fosforo","mineral_kg","mineral_precio","mineral_donde","sal_tipo","sal_kg","sal_precio","sal_donde","comentario"];
     const esc = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     const extra = ["mineral_por_kg", "sal_por_kg", "veces"];
     const lineas = [cols.concat(extra).join(",")].concat(filas.map((f) => cols.map((c) => esc(f[c])).concat([kM(f), kS(f), veces(f)].map((x) => x == null ? "" : x.toFixed(2))).join(",")));
